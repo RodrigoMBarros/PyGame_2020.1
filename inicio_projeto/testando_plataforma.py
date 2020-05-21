@@ -29,6 +29,7 @@ YELLOW = (255,255,0)
 
 # ==== Classes 
 
+        #jogador#
 class Famoso(pg.sprite.Sprite):
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
@@ -83,7 +84,7 @@ class Famoso(pg.sprite.Sprite):
 
 
 
-
+    #Plataformas - Notas#
 class Notas(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
         pg.sprite.Sprite.__init__(self)
@@ -96,7 +97,7 @@ class Notas(pg.sprite.Sprite):
 
 
 
-
+#===Classe do jogo 
 class Game:
     def __init__(self): 
 
@@ -121,9 +122,13 @@ class Game:
         self.jogador = Famoso()
         self.all_sprites.add(self.jogador)
 
-        self.platforms = pg.sprite.Group() #para as plataformas 
-        p1 = Notas( 0, HEIGHT-40, WIDTH, 40 )
+        self.platforms = pg.sprite.Group() #grupo para as plataformas 
+        p1 = Notas( 0, (HEIGHT-40), WIDTH, 40 )
+        p2 = Notas(WIDTH/2-50,HEIGHT*3 / 4, 100, 20)
+        self.all_sprites.add(p1)
         self.platforms.add(p1)
+        self.all_sprites.add(p2)
+        self.platforms.add(p2)
         self.run()
 
     def run(self):
@@ -139,6 +144,12 @@ class Game:
     def updates (self):
         #faz updates
         self.all_sprites.update()
+        #checando colisões 
+        hits = pg.sprite.spritecollide(self.jogador,self.platforms, False)
+
+        if len(hits) > 0:
+            self.jogador.pos.y = hits[0].rect.top
+            self.jogador.velo = 0
 
     def events(self):
         # Process input (events)
