@@ -47,11 +47,26 @@ class Famoso(pg.sprite.Sprite):
     def update(self):
            
         #aplica o atrito 
-        self.acel.x += self.velo.x * FAMOSO_ATRI
+        delta_vx = self.velo.x * FAMOSO_ATRI
+        if self.acel.x != 0:
+            if ((self.velo.x + delta_vx) / self.acel.x) < 0:
+                self.velo.x = 0 
+            else:
+                self.velo.x += delta_vx
+        elif self.velo.x != 0:
+            if ((self.velo.x + delta_vx)/ self.velo.x ) < 0:
+                self.velo.x = 0
+            else:
+                self.velo.x += delta_vx
+
         
         #equações do movimento 
-        self.velo += self.acel
-        self.pos += self.velo + 0.5 * self.acel  
+        self.velo.y += self.acel.y
+        self.pos += self.velo + 0.5 * self.acel 
+
+        #self.pos.x += self.velo.x
+        #self.rect.y += self.acel.y
+
 
         #limitando com a tela
         if self.pos.x > WIDTH:
@@ -60,10 +75,9 @@ class Famoso(pg.sprite.Sprite):
             self.pos.x = WIDTH
 
         #centro da imagem na posição calculada 
-        self.rect.center = self.pos 
+        self.rect.midbottom = self.pos 
 
     def trata_eventos(self, event):
-
         
         #=====Eventos para o jogador 
         
@@ -147,9 +161,9 @@ class Game:
         #checando colisões 
         hits = pg.sprite.spritecollide(self.jogador,self.platforms, False)
 
-        if len(hits) > 0:
+        if hits:
             self.jogador.pos.y = hits[0].rect.top
-            self.jogador.velo = 0
+            self.jogador.velo.y = 0
 
     def events(self):
         # Process input (events)
