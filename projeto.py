@@ -5,7 +5,7 @@ import random
 WIDTH = 500
 HEIGHT = 620
 FPS = 30
-NOME = "Jogo)"
+NOME = "Jogo"
 
 # player properies
 FAMOSO_ACEL = 5
@@ -32,6 +32,8 @@ ORANGE = (255, 127, 0)
 class Famoso(pg.sprite.Sprite):
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
+        #  self.image = pygame.image.load('assets/img/meteorBrown_med1.png').convert_alpha()
+        #  self.image = pygame.transform.scale(self.image, (METEOR_WIDTH, METEOR_HEIGHT))
         self.image = pg.Surface((30, 40))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()  # gera a posição e tamanho da imagem
@@ -45,19 +47,19 @@ class Famoso(pg.sprite.Sprite):
 
     def update(self):
         # equações do movimento
+
         # pulo
         self.Vy += self.grav
-
         self.rect.y += self.Vy
         self.rect.x += self.Vx
 
-        # limitando com a tela
+        # limitando com a tela nos lados
         if self.rect.right > WIDTH:
             self.Vx = 0
         if self.rect.left < 0:
             self.Vx = 0
 
-    def trata_eventos(self, event):  # Eventos para o jogador
+    def trata_eventos(self, event):  # açoes do jogador: controlar o movimento lateral (eixo x)
 
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_LEFT:
@@ -65,7 +67,7 @@ class Famoso(pg.sprite.Sprite):
             if event.key == pg.K_RIGHT:
                 self.Vx = FAMOSO_ACEL
 
-        elif event.type == pg.KEYUP:
+        elif event.type == pg.KEYUP:  # garante que pare de ir pro lado quando solta as teclas
             if event.key == pg.K_LEFT:
                 if self.Vx < 0:
                     self.Vx = 0
@@ -73,12 +75,14 @@ class Famoso(pg.sprite.Sprite):
                 if self.Vx > 0:
                     self.Vx = 0
 
-    # Plataformas - Notas
+
+# Plataformas - Notas
+
 class Notas(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((w, h))
-        self.image.fill(GREEN)
+        self.image.fill(BLACK)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -102,8 +106,8 @@ class Game:
     def refresh(self):
         # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
 
-        # ==== Grupo de sprits (personagens)
-        self.all_sprites = pg.sprite.pygame.sprite.Group()
+        # ==== Grupo de sprites (personagens)
+        self.all_sprites = pg.sprite.Group()
         self.jogador = Famoso()
         self.all_sprites.add(self.jogador)
 
@@ -131,9 +135,10 @@ class Game:
         # checando colisões
         hits = pg.sprite.spritecollide(self.jogador, self.platforms, False)
 
-        if hits:
-            self.jogador.rect.bottom = hits[0].rect.top
-            self.jogador.Vy = -16
+        if hits:  # verifica impacto entre o jogador e a plataforma para realizar o pulo
+            if self.jogador.Vy > 0 and self.jogador.rect.bottom > hits[0].rect.top and self.jogador.rect.bottom < hits[0].rect.bottom:
+                self.jogador.rect.bottom = hits[0].rect.top
+                self.jogador.Vy = -15
 
     def events(self):
         # Process input (events)
@@ -145,7 +150,7 @@ class Game:
             self.jogador.trata_eventos(event)
 
     def draw(self):
-        self.screen.fill(BLACK)
+        self.screen.fill(ORANGE)
         # self.screen.blit(backgrond,(0,0))
         self.all_sprites.draw(self.screen)
         pg.display.flip()  # uma desenhada e outra em construção #*after* drawuing everything
