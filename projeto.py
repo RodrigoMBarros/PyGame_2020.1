@@ -68,10 +68,14 @@ class Famoso(pg.sprite.Sprite):
                 self.Vx = FAMOSO_ACEL
 
         elif event.type == pg.KEYUP:  # garante que pare de ir pro lado quando solta as teclas
+
             if event.key == pg.K_LEFT:
+
                 if self.Vx < 0:
                     self.Vx = 0
+
             if event.key == pg.K_RIGHT:
+
                 if self.Vx > 0:
                     self.Vx = 0
 
