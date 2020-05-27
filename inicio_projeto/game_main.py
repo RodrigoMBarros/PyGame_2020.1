@@ -194,6 +194,9 @@ class Game:
             self.jogador.trata_eventos(event)
 
     def draw(self):
+
+        # Função para desenvolver imagens #
+
         self.screen.fill(LIGHTBLUE)
         # self.screen.blit(backgrond,(0,0))
         self.all_sprites.draw(self.screen)
@@ -212,17 +215,31 @@ class Game:
 
 
     def tela_inicial(self):
+
         # game go screen 
+        
         self.screen.fill(LIGHTBLUE)
         self.draw_textos("Juppy!", 48, WHITE, WIDTH / 2, HEIGHT /4)
+
         #== Instruções
         self.draw_textos("Use as setas para se mover", 22, GREEN, WIDTH/2, HEIGHT / 2)
         self.draw_textos("Precione espaço para jogar", 22, GREEN, WIDTH/2, (HEIGHT* 3/4) )
         pg.display.flip()
-
+        self.espera_acao()
 
     def tela_final(self):
-        pass
+
+        #Função para definir a tela final de gameover#
+
+        if not self.rodando:  #se quiser sair não tem que mostrar a tela final 
+            return
+        self.screen.fill(LIGHTBLUE)
+        # resultados 
+        self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT /4)
+        self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH/2, HEIGHT / 2)
+        self.draw_textos("Precione espaço para jogar novamente", 22, GREEN, WIDTH/2, (HEIGHT* 3/4) )
+        pg.display.flip()
+        #self.espera_acao()
 
     def espera_acao(self):
 
@@ -231,11 +248,19 @@ class Game:
         esperando = True
         while esperando:
             self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    esperando = False
+                    self.rodando = False
+
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_SPACE:
+                        esperando = False
             
 g = Game()
 g.tela_inicial()
-g.refresh()  # reniciar apenas no novo jogo
 while g.rodando:
+    g.refresh()  # reniciar apenas no novo jogo
     g.run()
     g.tela_final()
 
