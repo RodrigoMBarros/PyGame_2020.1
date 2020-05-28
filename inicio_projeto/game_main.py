@@ -5,15 +5,13 @@ import random
 WIDTH = 500
 HEIGHT = 620
 FPS = 30
-NOME = "EU TESTANDO :)"
+NOME = "Juppy"
 FONTE = 'arial'
-# == Player properies
-FAMOSO_ACEL = 5
-FAMOSO_ATRI = -0.12  # atrito, força contrária ao movimento reduzindo a aceleração
-GRAVIDADE = 1
-PULO_FAMOSO = 20
 
-# colocar fração? e aceleração?
+# == Player properies
+FAMOSO_ACEL = 8
+GRAVIDADE = 1
+PULO_FAMOSO = 22
 
 # == Cores
 WHITE = (255, 255, 255)
@@ -22,7 +20,7 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
-ORANGE = (255, 127, 0)
+ORANGE = (255, 97, 3)
 LIGHTBLUE = (0, 155, 155)
 
 # assets
@@ -44,7 +42,7 @@ class Famoso(pg.sprite.Sprite):
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((30, 40))
-        self.image.fill(YELLOW)
+        self.image.fill(ORANGE)
         self.rect = self.image.get_rect()  # gera a posição e tamanho da imagem
 
         # quantos pixels mexer/velocidade
@@ -107,8 +105,8 @@ class Game:
         self.all_sprites = pg.sprite.pygame.sprite.Group()
         pg.init()
         pg.mixer.init()  # musica
-        self.rodando = True
-        self.jogo = True
+        self.rodando = True  # define o looping do gameplay
+        self.jogo = True  # define o looping do programa
         self.nome_fonte = pg.font.match_font(FONTE)
 
         # ======tela
@@ -118,6 +116,7 @@ class Game:
         self.clock = pg.time.Clock()  # tempo
 
     def refresh(self):  # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
+        self.score = 0
 
         # ==== Grupo de sprits (personagens)
         self.all_sprites.add(self.jogador)
@@ -135,7 +134,6 @@ class Game:
         self.clock.tick(FPS)
 
         # ==== Chamando events e as tres funções básicas do game loop que se conversam
-
         self.events()  # recebe comandos do taclado e mouse (controle do jogador)
         self.updates()
         self.draw()
@@ -148,8 +146,8 @@ class Game:
 
         if hits:  # verifica impacto entre jogador e a plataforma para realizar o pulo
 
-            if ((self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
-                    self.jogador.rect.bottom < hits[0].rect.bottom)):
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
+                    self.jogador.rect.bottom < hits[0].rect.bottom):
                 self.jogador.rect.bottom = hits[0].rect.top
                 self.jogador.Vy = -PULO_FAMOSO
 
@@ -175,10 +173,10 @@ class Game:
             self.rodando = False
 
             # recolocando as plataformas:
-        while len(self.platforms) < 7:
+        while len(self.platforms) < 8:
             width = random.randrange(50, 100)
             p = Notas(random.randrange(0, WIDTH - width),
-                      random.randrange(-55, -30), width, 20)
+                      random.randrange(-70, -5), width, 20)
             self.platforms.add(p)
             self.all_sprites.add(p)
 
@@ -188,6 +186,7 @@ class Game:
         for event in events:
             # checando para sair do jogo
             if event.type == pg.QUIT:
+                self.rodando = False
                 self.jogo = False
             self.jogador.trata_eventos(event)
 
@@ -238,7 +237,7 @@ class Game:
 
     def espera_acao(self):
 
-        # Função para não bagunçar os eventos, e controlar o tempo e espera das telas iniciais e finais#
+        # Função para não bagunçar os eventos, e controlar o tempo e espera das telas iniciais e finais
 
         esperando = True
         while esperando:
@@ -247,6 +246,7 @@ class Game:
                 if event.type == pg.QUIT:
                     esperando = False
                     self.jogo = False
+                    self.rodando = False
 
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_SPACE:
@@ -255,13 +255,13 @@ class Game:
 
 
 g = Game()  # o jogo de fato
-
 while g.jogo:
-    g.tela_inicial()
+    g.tela_inicial()  # gera menu inicial e opcoes
     g.refresh()  # reniciar apenas no novo jogo
     while g.rodando:
-        g.run()
+        g.run()  # gera a gameplay de fato
 
-    g.tela_final()  # tela do game over
+    if g.jogo:
+        g.tela_final()  # tela do game over
     continue
 pg.quit()
