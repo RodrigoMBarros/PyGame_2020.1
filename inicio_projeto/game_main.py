@@ -264,4 +264,8 @@ while g.jogo:
     if g.jogo:
         g.tela_final()  # tela do game over
     continue
+<<<<<<< HEAD
 pg.quit()
+=======
+pg.quit()
+>>>>>>> d0a1ac7a97066e83a06be690df2a99ca54296aca
