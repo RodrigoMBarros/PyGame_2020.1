@@ -259,8 +259,9 @@ class Game:
             
 g = Game()
 g.tela_inicial()
+g.refresh()  # reniciar apenas no novo jogo
 while g.rodando:
-    g.refresh()  # reniciar apenas no novo jogo
+   
     g.run()
     g.tela_final()
 
