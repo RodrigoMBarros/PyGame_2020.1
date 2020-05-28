@@ -174,11 +174,19 @@ class Game:
 
             # recolocando as plataformas:
         while len(self.platforms) < 8:
+            
             width = random.randrange(50, 100)
-            p = Notas(random.randrange(0, WIDTH - width),
-                      random.randrange(-70, -5), width, 20)
-            self.platforms.add(p)
-            self.all_sprites.add(p)
+            p1 = Notas(random.randrange(0, WIDTH/2),
+                      random.randrange(-75, -50 ), width, 20)
+
+            p2 =  Notas(random.randrange(WIDTH/2, WIDTH - width),
+                      random.randrange(-50, -30), width, 20)
+            self.platforms.add(p1)
+            self.all_sprites.add(p1)
+
+            self.platforms.add(p2)
+            self.all_sprites.add(p2)
+
 
     def events(self):
         # Process input (events)
@@ -264,8 +272,6 @@ while g.jogo:
     if g.jogo:
         g.tela_final()  # tela do game over
     continue
-<<<<<<< HEAD
 pg.quit()
-=======
-pg.quit()
->>>>>>> d0a1ac7a97066e83a06be690df2a99ca54296aca
+
+
