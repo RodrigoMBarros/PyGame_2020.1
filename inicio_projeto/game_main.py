@@ -1,5 +1,4 @@
 import pygame as pg
-import sys
 import random
 
 WIDTH = 500
@@ -197,21 +196,32 @@ class Game:
         if len(self.platforms_R) == 0:
             self.rodando = False
 
-            # recolocando as plataformas regulares:
-        if len(self.platforms_R) < 7:
+        if len(self.platforms_R) < 6:  # recolocando as plataformas regulares:
             width = random.randrange(50, 100)
-            p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
-            while pg.sprite.spritecollide(p, self.platforms_R, False) or pg.sprite.spritecollide(p, self.platforms_A, False):
+            p = Notas_regulares(random.randrange(0, WIDTH - width), random.randrange(-30, 0), width, 20)
+            while pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                    pg.sprite.spritecollide(p, self.platforms_A, False):
                 p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
             self.platforms_R.add(p)
             self.all_sprites.add(p)
 
-            # recolocando as plataformas aleatorias:
-        if len(self.platforms_A) < 2:
+        n_ale = 1
+        if self.score >= 20:  # coloca uma de cada vez pra nao ficarem juntas
+            n_ale = 2
+        if self.score >= 40:  # coloca uma de cada vez pra nao ficarem juntas
+            n_ale = 3
+        if self.score >= 1000:  # diminui o numero de plataformas pra ficar mais dificil
+            n_ale = 2
+        if self.score >= 2000:  # diminui o numero de plataformas pra ficar mais dificil
+            n_ale = 1
+        if self.score >= 3000:  # diminui o numero de plataformas pra ficar mais dificil
+            n_ale = 0
+        if len(self.platforms_A) < n_ale:  # recolocando as plataformas aleatorias:
             width = random.randrange(50, 100)
-            p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-100, -20)), width, 20)
-            while pg.sprite.spritecollide(p, self.platforms_A, False or pg.sprite.spritecollide(p, self.platforms_R, False)):
-                p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-100, -20)), width, 20)
+            p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-80, -20)), width, 20)
+            while pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                    pg.sprite.spritecollide(p, self.platforms_R, False):
+                p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-80, -20)), width, 20)
             self.platforms_A.add(p)
             self.all_sprites.add(p)
 
