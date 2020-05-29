@@ -1,5 +1,4 @@
 import pygame as pg
-import sys
 import random
 
 WIDTH = 500
@@ -199,7 +198,7 @@ class Game:
 
         if len(self.platforms_R) < 6:  # recolocando as plataformas regulares:
             width = random.randrange(50, 100)
-            p = Notas_regulares(random.randrange(0, WIDTH - width), random.randrange(-30, 0), width, 20)
+            p = Notas_regulares(random.randrange(0, WIDTH - width), -30, width, 20)
             while pg.sprite.spritecollide(p, self.platforms_R, False) or \
                     pg.sprite.spritecollide(p, self.platforms_A, False):
                 p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
