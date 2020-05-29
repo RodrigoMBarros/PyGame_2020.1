@@ -21,18 +21,18 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 97, 3)
-LIGHTBLUE = (0, 155, 155)
+LIGHTBLUE = (10, 155, 155)
 
 # assets
 # backgrond = pg.image.load("imagem.fundo.png").convert()
 
 # === Formatando plataformas
 
-LISTA_plataformas = [(0, HEIGHT - 40, WIDTH, 40),
-                     (WIDTH / 2 - 50, HEIGHT * 3 / 4, 100, 20),
-                     (125, HEIGHT - 350, 100, 20),
-                     (350, 200, 100, 20),
-                     (175, 100, 50, 20)]
+LISTA_plataformas_iniciais = [(0, HEIGHT - 40, WIDTH, 40),
+                              (WIDTH / 2 - 50, HEIGHT * 3 / 4, 100, 20),
+                              (125, HEIGHT - 350, 100, 20),
+                              (350, 200, 100, 20),
+                              (175, 100, 50, 20)]
 
 
 # ==== Classes
@@ -61,11 +61,11 @@ class Famoso(pg.sprite.Sprite):
         self.rect.y += self.Vy
         self.rect.x += self.Vx
 
-        # limitando com a tela
+        # atravessando a tela de um lado pro outro
         if self.rect.right > WIDTH:
-            self.Vx = 0
+            self.rect.left = 0
         if self.rect.left < 0:
-            self.Vx = 0
+            self.rect.right = WIDTH
 
     def trata_eventos(self, event):  # Eventos para o jogador
 
@@ -84,11 +84,21 @@ class Famoso(pg.sprite.Sprite):
     # Plataformas - Notas#
 
 
-class Notas(pg.sprite.Sprite):
+class Notas_regulares(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface((w, h))
         self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Notas_aleatorias(pg.sprite.Sprite):
+    def __init__(self, x, y, w, h):
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.Surface((w, h))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -99,7 +109,8 @@ class Game:
     def __init__(self):
 
         # =====Iniciações
-        self.platforms = pg.sprite.Group()  # grupo para as plataformas
+        self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
+        self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
         self.score = 0
         self.jogador = Famoso()
         self.all_sprites = pg.sprite.pygame.sprite.Group()
@@ -124,10 +135,10 @@ class Game:
         self.jogador.rect.y = HEIGHT / 2
         self.jogador.Vy = 0  # devolve jogador para a velocidade original
 
-        for plat in LISTA_plataformas:
-            p = Notas(*plat)  # explora todas a lista de forma quebrada
+        for plat in LISTA_plataformas_iniciais:
+            p = Notas_regulares(*plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
-            self.platforms.add(p)
+            self.platforms_R.add(p)
 
     def run(self):
         # game Loop
@@ -142,7 +153,8 @@ class Game:
         # faz updates
         self.all_sprites.update()
         # checando colisões
-        hits = pg.sprite.spritecollide(self.jogador, self.platforms, False)
+        hits = pg.sprite.spritecollide(self.jogador, self.platforms_R, False)  # contato com as plataformas regulares
+        hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
 
         if hits:  # verifica impacto entre jogador e a plataforma para realizar o pulo
 
@@ -151,10 +163,23 @@ class Game:
                 self.jogador.rect.bottom = hits[0].rect.top
                 self.jogador.Vy = -PULO_FAMOSO
 
+        if hits2:  # teste plataformas novas
+
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
+                    self.jogador.rect.bottom < hits2[0].rect.bottom):
+                self.jogador.rect.bottom = hits2[0].rect.top
+                self.jogador.Vy = -PULO_FAMOSO
+
         # Fazer a tela rodar quando o jogador chegar a 1/4 da tela
         if self.jogador.rect.top <= HEIGHT / 4:
             self.jogador.rect.y += abs(self.jogador.Vy)
-            for plat in self.platforms:
+            for plat in self.platforms_R:
+                plat.rect.y += abs(self.jogador.Vy)
+                if plat.rect.y >= HEIGHT:
+                    plat.kill()
+                    self.score += 10
+
+            for plat in self.platforms_A:
                 plat.rect.y += abs(self.jogador.Vy)
                 if plat.rect.y >= HEIGHT:
                     plat.kill()
@@ -169,15 +194,25 @@ class Game:
                 if sprite.rect.bottom < 0:
                     sprite.kill()
 
-        if len(self.platforms) == 0:
+        if len(self.platforms_R) == 0:
             self.rodando = False
 
-            # recolocando as plataformas:
-        while len(self.platforms) < 8:
+            # recolocando as plataformas regulares:
+        if len(self.platforms_R) < 7:
             width = random.randrange(50, 100)
-            p = Notas(random.randrange(0, WIDTH - width),
-                      random.randrange(-70, -5), width, 20)
-            self.platforms.add(p)
+            p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
+            while pg.sprite.spritecollide(p, self.platforms_R, False) or pg.sprite.spritecollide(p, self.platforms_A, False):
+                p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
+            self.platforms_R.add(p)
+            self.all_sprites.add(p)
+
+            # recolocando as plataformas aleatorias:
+        if len(self.platforms_A) < 2:
+            width = random.randrange(50, 100)
+            p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-100, -20)), width, 20)
+            while pg.sprite.spritecollide(p, self.platforms_A, False or pg.sprite.spritecollide(p, self.platforms_R, False)):
+                p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-100, -20)), width, 20)
+            self.platforms_A.add(p)
             self.all_sprites.add(p)
 
     def events(self):
@@ -192,7 +227,7 @@ class Game:
 
     def draw(self):
 
-        # Função para desenvolver imagens #
+        # Função para desenvolver imagens
 
         self.screen.fill(LIGHTBLUE)
         # self.screen.blit(backgrond,(0,0))
@@ -261,7 +296,7 @@ while g.jogo:
     while g.rodando:
         g.run()  # gera a gameplay de fato
 
-    if g.jogo:
+    if g.jogo:  # garante que da pra fechar o jogo no meio do run
         g.tela_final()  # tela do game over
     continue
 pg.quit()
