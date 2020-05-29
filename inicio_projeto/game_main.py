@@ -1,4 +1,5 @@
 import pygame as pg
+import sys
 import random
 
 WIDTH = 500
