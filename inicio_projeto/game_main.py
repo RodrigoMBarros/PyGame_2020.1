@@ -28,10 +28,21 @@ LIGHTBLUE = (10, 155, 155)
 # === Formatando plataformas
 
 LISTA_plataformas_iniciais = [(0, HEIGHT - 40, WIDTH, 40),
-                              (WIDTH / 2 - 50, HEIGHT * 3 / 4, 100, 20),
-                              (125, HEIGHT - 350, 100, 20),
+                              (200, 440, 100, 20),
+                              (125, 320, 100, 20),
                               (350, 200, 100, 20),
-                              (175, 100, 50, 20)]
+                              (175, 80, 50, 20),
+                              (100, -30, 100, 20),
+                              (300, -140, 100, 20),
+                              (400, -250, 50, 20),
+                              (350, -360, 100, 20),
+                              (175, -470, 70, 20)]
+
+LISTA_aleatorias_inciais = [(60, 180, 100, 20),
+                            (375, 40, 100, 20),
+                            (400, 350, 50, 20),
+                            (30, -250, 50, 20),
+                            (370, -450, 100, 20)]
 
 
 # ==== Classes
@@ -80,7 +91,7 @@ class Famoso(pg.sprite.Sprite):
             if event.key == pg.K_RIGHT:
                 self.Vx = 0
 
-    # Plataformas - Notas#
+    # Plataformas - Notas
 
 
 class Notas_regulares(pg.sprite.Sprite):
@@ -139,6 +150,11 @@ class Game:
             self.all_sprites.add(p)
             self.platforms_R.add(p)
 
+        for plat in LISTA_aleatorias_inciais:
+            p = Notas_aleatorias(*plat)  # explora todas a lista de forma quebrada
+            self.all_sprites.add(p)
+            self.platforms_A.add(p)
+
     def run(self):
         # game Loop
         self.clock.tick(FPS)
@@ -155,14 +171,14 @@ class Game:
         hits = pg.sprite.spritecollide(self.jogador, self.platforms_R, False)  # contato com as plataformas regulares
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
 
-        if hits:  # verifica impacto entre jogador e a plataforma para realizar o pulo
+        if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
 
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
                     self.jogador.rect.bottom < hits[0].rect.bottom):
                 self.jogador.rect.bottom = hits[0].rect.top
                 self.jogador.Vy = -PULO_FAMOSO
 
-        if hits2:  # teste plataformas novas
+        if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
 
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
                     self.jogador.rect.bottom < hits2[0].rect.bottom):
@@ -174,13 +190,29 @@ class Game:
             self.jogador.rect.y += abs(self.jogador.Vy)
             for plat in self.platforms_R:
                 plat.rect.y += abs(self.jogador.Vy)
-                if plat.rect.y >= HEIGHT:
+                if plat.rect.y >= HEIGHT:   # recolocando as plataformas regulares
+                    width = random.randrange(50, 100)
+                    p = Notas_regulares(random.randrange(0, WIDTH - width), plat.rect.y - HEIGHT*2, width, 20)
+                    while pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_A, False):
+                        p = Notas_regulares(random.randrange(0, WIDTH - width), plat.rect.y - HEIGHT*2, width, 20)
+                    self.platforms_R.add(p)
+                    self.all_sprites.add(p)
                     plat.kill()
                     self.score += 10
 
             for plat in self.platforms_A:
                 plat.rect.y += abs(self.jogador.Vy)
-                if plat.rect.y >= HEIGHT:
+                if plat.rect.y >= HEIGHT:   # recolocando as plataformas aleatorias
+                    width = random.randrange(50, 100)
+                    p = Notas_aleatorias(random.randrange(0, WIDTH - width),
+                                         (random.randrange(-HEIGHT, -20)), width, 20)
+                    while pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_R, False):
+                        p = Notas_aleatorias(random.randrange(0, WIDTH - width),
+                                             (random.randrange(-HEIGHT, -20)), width, 20)
+                    self.platforms_A.add(p)
+                    self.all_sprites.add(p)
                     plat.kill()
                     self.score += 10
 
@@ -195,35 +227,6 @@ class Game:
 
         if len(self.platforms_R) == 0:
             self.rodando = False
-
-        if len(self.platforms_R) < 6:  # recolocando as plataformas regulares:
-            width = random.randrange(50, 100)
-            p = Notas_regulares(random.randrange(0, WIDTH - width), -30, width, 20)
-            while pg.sprite.spritecollide(p, self.platforms_R, False) or \
-                    pg.sprite.spritecollide(p, self.platforms_A, False):
-                p = Notas_regulares(random.randrange(0, WIDTH - width), -20, width, 20)
-            self.platforms_R.add(p)
-            self.all_sprites.add(p)
-
-        n_ale = 1
-        if self.score >= 20:  # coloca uma de cada vez pra nao ficarem juntas
-            n_ale = 2
-        if self.score >= 40:  # coloca uma de cada vez pra nao ficarem juntas
-            n_ale = 3
-        if self.score >= 1000:  # diminui o numero de plataformas pra ficar mais dificil
-            n_ale = 2
-        if self.score >= 2000:  # diminui o numero de plataformas pra ficar mais dificil
-            n_ale = 1
-        if self.score >= 3000:  # diminui o numero de plataformas pra ficar mais dificil
-            n_ale = 0
-        if len(self.platforms_A) < n_ale:  # recolocando as plataformas aleatorias:
-            width = random.randrange(50, 100)
-            p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-80, -20)), width, 20)
-            while pg.sprite.spritecollide(p, self.platforms_A, False) or \
-                    pg.sprite.spritecollide(p, self.platforms_R, False):
-                p = Notas_aleatorias(random.randrange(0, WIDTH - width), (random.randrange(-80, -20)), width, 20)
-            self.platforms_A.add(p)
-            self.all_sprites.add(p)
 
     def events(self):
         # Process input (events)
