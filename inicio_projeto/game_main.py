@@ -3,14 +3,14 @@ import random
 
 WIDTH = 500
 HEIGHT = 620
-FPS = 30
+FPS = 45
 NOME = "Juppy"
 FONTE = 'arial'
 
 # == Player properies
-FAMOSO_ACEL = 8
-GRAVIDADE = 1
-PULO_FAMOSO = 22
+FAMOSO_ACEL = 6
+GRAVIDADE = 0.75
+PULO_FAMOSO = 18
 
 # == Cores
 WHITE = (255, 255, 255)
@@ -36,7 +36,7 @@ LISTA_plataformas_iniciais = [(0, HEIGHT - 40, WIDTH, 40),
 
 # ==== Classes
 
-# jogador#
+# jogador #
 class Famoso(pg.sprite.Sprite):
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
@@ -55,6 +55,7 @@ class Famoso(pg.sprite.Sprite):
 
         # pulo
         self.Vy += self.grav
+
         # equações do movimento
 
         self.rect.y += self.Vy
@@ -80,8 +81,8 @@ class Famoso(pg.sprite.Sprite):
             if event.key == pg.K_RIGHT:
                 self.Vx = 0
 
+    
     # Plataformas - Notas#
-
 
 class Notas_regulares(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
