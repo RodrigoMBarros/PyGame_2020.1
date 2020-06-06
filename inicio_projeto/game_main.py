@@ -1,11 +1,14 @@
 import pygame as pg
 import random
+from os import path  #para criarar meios de se encontrar um arquivo 
 
 WIDTH = 500
 HEIGHT = 620
 FPS = 30
 NOME = "Juppy"
 FONTE = 'arial'
+HS_FILE = "highscore.txt"
+SPRITESHEET = "p1_spritesheet.png"
 
 # == Player properies
 FAMOSO_ACEL = 8
@@ -47,13 +50,27 @@ LISTA_aleatorias_inciais = [(60, 180, 100, 20),
 
 # ==== Classes
 
+# Player sprites #
+class Spritessheets:
+    #carregando e lendo as sprites na imagem geral 
+    def __init__(self, filename) : 
+        self.spritesheet = pg.image.load(filename).convert()
+
+    def get_image(self, x, y, width, height):
+        #pega uma imagem do spritesheet 
+        image = pg.Surface((width, height))
+        image.blit(self.spritesheet, (0,0), (x, y, width, height) )
+        return image
+
 # jogador#
 class Famoso(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, game):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((30, 40))
-        self.image.fill(ORANGE)
+        self.game = game
+        self.image = self.game.spritesheet.get_image(0, 196, 66, 92)
+        #self.image.fill(ORANGE)
         self.rect = self.image.get_rect()  # gera a posição e tamanho da imagem
+        self.maior_altura = self.rect.bottom
 
         # quantos pixels mexer/velocidade
         self.rect.x = WIDTH / 2
@@ -70,6 +87,10 @@ class Famoso(pg.sprite.Sprite):
 
         self.rect.y += self.Vy
         self.rect.x += self.Vx
+
+        # Se subindo, atualiza a maior altura atingida
+        if self.Vy < 0:
+            self.maior_altura = self.rect.bottom
 
         # atravessando a tela de um lado pro outro
         if self.rect.right > WIDTH:
@@ -119,16 +140,15 @@ class Game:
     def __init__(self):
 
         # =====Iniciações
-        self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
-        self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
-        self.score = 0
+        pg.init()
         self.jogador = Famoso()
         self.all_sprites = pg.sprite.pygame.sprite.Group()
-        pg.init()
+        
         pg.mixer.init()  # musica
         self.rodando = True  # define o looping do gameplay
         self.jogo = True  # define o looping do programa
         self.nome_fonte = pg.font.match_font(FONTE)
+        self.load_data()
 
         # ======tela
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -136,6 +156,19 @@ class Game:
         pg.display.set_caption(NOME)
         self.clock = pg.time.Clock()  # tempo
 
+    def load_data(self):
+        #carrega o high sore
+        self.dir = path.dirname(__file__)  #usado para encontrar o folder do arquivo 
+        img_dir = path.join(self.dir, 'img')
+
+        with open(path.join(self.dir, HS_FILE), 'w') as ah:#abre o file para escrevermos, olhar, ou criar
+            try:
+                self.highscore = int(ah.read())
+            except:
+                self.highscore = 0
+        
+        #carrega imagens das sprites
+        self.spritesheet = Spritessheets(path.join(img_dir, SPRITESHEET))
     def refresh(self):  # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
         self.score = 0
 
@@ -145,6 +178,10 @@ class Game:
         self.jogador.rect.y = HEIGHT / 2
         self.jogador.Vy = 0  # devolve jogador para a velocidade original
 
+        #=== Grupo de spreites plataformas
+        self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
+        self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
+        
         for plat in LISTA_plataformas_iniciais:
             p = Notas_regulares(*plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
@@ -172,16 +209,14 @@ class Game:
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
 
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
-
-            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
-                    self.jogador.rect.bottom < hits[0].rect.bottom):
+            
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (self.jogador.maior_altura < hits[0].rect.top):
                 self.jogador.rect.bottom = hits[0].rect.top
                 self.jogador.Vy = -PULO_FAMOSO
 
         if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
 
-            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
-                    self.jogador.rect.bottom < hits2[0].rect.bottom):
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (self.jogador.maior_altura < hits2[0].rect.top):
                 self.jogador.rect.bottom = hits2[0].rect.top
                 self.jogador.Vy = -PULO_FAMOSO
 
@@ -266,6 +301,7 @@ class Game:
         # == Instruções
         self.draw_textos("Use as setas para se mover", 22, GREEN, WIDTH / 2, HEIGHT / 2)
         self.draw_textos("Precione espaço para jogar", 22, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
+        self.draw_textos(("High Score :" + str(self.highscore)), 22, WHITE, (WIDTH/2), 15)
         pg.display.flip()
         self.espera_acao()
 
@@ -280,6 +316,13 @@ class Game:
         self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT / 4)
         self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH / 2, HEIGHT / 2)
         self.draw_textos("Precione espaço para jogar novamente", 22, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
+        if self.score > self.highscore:
+            self.highscore = self.score
+            self.draw_textos("NOVO HIGH SCORE!", 22, WHITE, WIDTH/2, (HEIGHT/2 + 40))
+            with open(path.join(self.dir, HS_FILE), 'w') as ah:
+                ah.write(str(self.score))
+        else :
+            self.draw_textos("NOVO HIGH SCORE!", 22, WHITE, WIDTH/2, (HEIGHT/2 + 40))
         pg.display.flip()
         self.espera_acao()
 
