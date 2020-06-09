@@ -205,11 +205,11 @@ class Famoso(pg.sprite.Sprite):
             #else:
                 self.jupping = False
 
-            #if self.jumpping:
-             #   if agora - self.last_update > 200:
-              #      self.last_update = agora
-               #     self.current_frame = (self.current_frame + 1) % len(self.walk_r)
-                #    self.image = self.jump
+            if self.Vy != 0:
+               if agora - self.last_update > 200:
+                    self.last_update = agora
+                    self.current_frame = (self.current_frame + 1) % len(self.walk_r)
+                    self.image = self.jump
                     
                     
                 
@@ -268,8 +268,6 @@ class Game:
         self.load_data()
 
         self.jogador = Famoso(self.spritesheet)
-        #self.plat_reg = Notas_regulares(self.spritesheet_p)
-        #self.plat_alet = Notas_aleatorias(self.spritesheet_p)
        
         # self.backgrond = pg.image.load("imagem.fundo.png").convert()
         pg.display.set_caption(NOME)
