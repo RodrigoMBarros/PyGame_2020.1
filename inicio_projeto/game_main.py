@@ -9,11 +9,12 @@ NOME = "El mañana!"
 FONTE = 'arial'
 HS_FILE = "highscore.txt"
 SPRITESHEET = "p1_spritesheet.png"
+SPRITESHEET_PLAT = "tiles_spritesheet.png"
 
 # == Player properies
 FAMOSO_ACEL = 8
 GRAVIDADE = 1
-PULO_FAMOSO = 22
+PULO_FAMOSO = 20
 
 # == Cores
 WHITE = (255, 255, 255)
@@ -30,22 +31,22 @@ LIGHTBLUE = (10, 155, 155)
 
 # === Formatando plataformas
 
-LISTA_plataformas_iniciais = [(0, HEIGHT - 40, WIDTH, 40),
-                              (200, 440, 100, 20),
-                              (125, 320, 100, 20),
-                              (350, 200, 100, 20),
-                              (175, 80, 50, 20),
-                              (100, -30, 100, 20),
-                              (300, -140, 100, 20),
-                              (400, -250, 50, 20),
-                              (350, -360, 100, 20),
-                              (175, -470, 70, 20)]
+LISTA_plataformas_iniciais = [(0, HEIGHT - 40),
+                              (200, 440),
+                              (125, 320),
+                              (350, 200),
+                              (175, 80),
+                              (100, -30),
+                              (300, -140),
+                              (400, -250),
+                              (350, -360),
+                              (175, -470)]
 
-LISTA_aleatorias_inciais = [(60, 180, 100, 20),
-                            (375, 40, 100, 20),
-                            (400, 350, 50, 20),
-                            (30, -250, 50, 20),
-                            (370, -450, 100, 20)]
+LISTA_aleatorias_inciais = [(60, 180),
+                            (375, 40),
+                            (400, 350),
+                            (30, -250),
+                            (370, -450)]
 
 
 # ==== Classes
@@ -64,6 +65,35 @@ class Spritessheets:
         #defininndo tamanho
         largura = int(width/(1.4))
         altura = int(height/(1.4))
+        image = pg.transform.scale(image, (largura, altura))
+
+        return image
+
+class Spritessheets_plat:
+    #carregando e lendo as sprites na imagem geral 
+    def __init__(self, filename) : 
+        self.spritesheet = pg.image.load(filename).convert_alpha()
+
+    def get_image_plat(self, x, y, width, height):
+        #pega uma imagem do spritesheet 
+        image = pg.Surface((width, height), pg.SRCALPHA)
+        image.blit(self.spritesheet, (0,0), (x, y, width, height) )
+
+        #defininndo tamanho
+        largura = int(width/(0.75))
+        altura = int(height//2)
+        image = pg.transform.scale(image, (largura, altura))
+
+        return image
+
+    def get_image_plat2(self, x, y, width, height):
+        #pega uma imagem do spritesheet 
+        image = pg.Surface((width, height), pg.SRCALPHA)
+        image.blit(self.spritesheet, (0,0), (x, y, width, height) )
+
+        #defininndo tamanho
+        largura = int(width)
+        altura = int(height//2)
         image = pg.transform.scale(image, (largura, altura))
 
         return image
@@ -104,9 +134,6 @@ class Famoso(pg.sprite.Sprite):
         self.front = [self.spritesheet.get_image(0, 196, 66, 92), 
                     self.spritesheet.get_image(67, 196, 66, 92)]
 
-        #for frame in (self.front):
-         
-         #  frame.set.colorkey(BLACK)
         
         #____andando
         self.walk_r = [self.spritesheet.get_image(0, 98, 72, 97), 
@@ -114,7 +141,6 @@ class Famoso(pg.sprite.Sprite):
 
         self.walk_l = []
         for frame in self.walk_r:
-            #frame.set.colorkey(BLACK)
             self.walk_l.append(pg.transform.flip(frame, True, False)) #vira horizontalmente mas não verticalmente
 
         
@@ -133,18 +159,12 @@ class Famoso(pg.sprite.Sprite):
             self.maior_altura = self.rect.bottom
 
         # atravessando a tela de um lado pro outro
-        if self.rect.right > WIDTH:
-            self.rect.left = 0
-        if self.rect.left < 0:
-            self.rect.right = WIDTH
+        if self.rect.right > WIDTH + self.rect.width / 2:
+            self.rect.left = 0 - self.rect.width / 2
+        if self.rect.left < 0 - self.rect.width / 2:
+            self.rect.right = WIDTH + self.rect.width / 2
 
-    def animacao(self):
-        agora = pg.time.get_ticks()
-        if not self.jumpping and not self.walking:
-            if agora - self.last_update > 350:   #checa se está na hora de mudar os frames 
-                self.last_update = agora           # se estiver o tempo do último update de imagem se tona o momento 
-                self.current_frame = (self.current_frame + 1) % len(self.front)   #pra trocar a frame
-                self.image = self.front[self.current_frame] #troca a imagem para o frame correto 
+    
 
     def trata_eventos(self, event):  # Eventos para o jogador
 
@@ -160,24 +180,70 @@ class Famoso(pg.sprite.Sprite):
             if event.key == pg.K_RIGHT:
                 self.Vx = 0
 
+    def animacao(self):
+            agora = pg.time.get_ticks()
+
+            #__ ajustando andada 
+            if self.Vx != 0:
+                self.walking = True 
+            else:
+                self.walking = False
+
+            if self.walking:
+                if agora - self.last_update > 200:
+                    self.last_update = agora
+                    self.current_frame = (self.current_frame + 1) % len(self.walk_r)
+                    
+
+                    if self.Vx > 0 :
+                        self.image = self.walk_r[self.current_frame]
+                    elif self.Vx < 0 :
+                        self.image = self.walk_l[self.current_frame]
+
+            #if hits == False and hits2 == False :
+                self.jumpping = True 
+            #else:
+                self.jupping = False
+
+            #if self.jumpping:
+             #   if agora - self.last_update > 200:
+              #      self.last_update = agora
+               #     self.current_frame = (self.current_frame + 1) % len(self.walk_r)
+                #    self.image = self.jump
+                    
+                    
+                
+            if not self.jumpping and not self.walking:
+                if agora - self.last_update > 450:   #checa se está na hora de mudar os frames 
+                    self.last_update = agora           # se estiver o tempo do último update de imagem se tona o momento 
+                    self.current_frame = (self.current_frame + 1) % len(self.front)   #pra trocar a frame
+                    self.image = self.front[self.current_frame] #troca a imagem para o frame correto 
+
+
+
+
+
     # Plataformas - Notas
 
 
 class Notas_regulares(pg.sprite.Sprite):
-    def __init__(self, x, y, w, h):
+    def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((w, h), pg.SRCALPHA)
-        self.image.fill(GREEN)
+        self.spritesheet_p = spritesheet_p
+
+         
+
+        self.image= self.spritesheet_p.get_image_plat(144, 648, 70, 70)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
 
 class Notas_aleatorias(pg.sprite.Sprite):
-    def __init__(self, x, y, w, h):
+    def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((w, h), pg.SRCALPHA)
-        self.image.fill(YELLOW)
+
+        self.image = spritesheet_p.get_image_plat2(144, 648, 70, 70)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -202,6 +268,8 @@ class Game:
         self.load_data()
 
         self.jogador = Famoso(self.spritesheet)
+        #self.plat_reg = Notas_regulares(self.spritesheet_p)
+        #self.plat_alet = Notas_aleatorias(self.spritesheet_p)
        
         # self.backgrond = pg.image.load("imagem.fundo.png").convert()
         pg.display.set_caption(NOME)
@@ -220,6 +288,7 @@ class Game:
         
         #carrega imagens das sprites
         self.spritesheet = Spritessheets(path.join(img_dir, SPRITESHEET))
+        self.spritesheet_p = Spritessheets_plat(path.join(img_dir, SPRITESHEET_PLAT))
     def refresh(self):  # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
         self.score = 0
 
@@ -234,12 +303,12 @@ class Game:
         self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
         
         for plat in LISTA_plataformas_iniciais:
-            p = Notas_regulares(*plat)  # explora todas a lista de forma quebrada
+            p = Notas_regulares(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
             self.platforms_R.add(p)
 
         for plat in LISTA_aleatorias_inciais:
-            p = Notas_aleatorias(*plat)  # explora todas a lista de forma quebrada
+            p = Notas_aleatorias(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
             self.platforms_A.add(p)
 
@@ -278,10 +347,10 @@ class Game:
                 plat.rect.y += abs(self.jogador.Vy)
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas regulares
                     width = random.randrange(50, 100)
-                    p = Notas_regulares(random.randrange(0, WIDTH - width), plat.rect.y - HEIGHT*2, width, 20)
+                    p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))
                     while pg.sprite.spritecollide(p, self.platforms_R, False) or \
                             pg.sprite.spritecollide(p, self.platforms_A, False):
-                        p = Notas_regulares(random.randrange(0, WIDTH - width), plat.rect.y - HEIGHT*2, width, 20)
+                        p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))
                     self.platforms_R.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
@@ -291,12 +360,10 @@ class Game:
                 plat.rect.y += abs(self.jogador.Vy)
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas aleatorias
                     width = random.randrange(50, 100)
-                    p = Notas_aleatorias(random.randrange(0, WIDTH - width),
-                                         (random.randrange(-HEIGHT, -20)), width, 20)
+                    p = Notas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (random.randrange(-HEIGHT, -20)))
                     while pg.sprite.spritecollide(p, self.platforms_A, False) or \
                             pg.sprite.spritecollide(p, self.platforms_R, False):
-                        p = Notas_aleatorias(random.randrange(0, WIDTH - width),
-                                             (random.randrange(-HEIGHT, -20)), width, 20)
+                        p = Notas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (random.randrange(-HEIGHT, -20)))
                     self.platforms_A.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
