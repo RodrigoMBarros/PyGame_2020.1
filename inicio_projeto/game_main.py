@@ -5,7 +5,7 @@ from os import path  #para criarar meios de se encontrar um arquivo
 WIDTH = 500
 HEIGHT = 620
 FPS = 30
-NOME = "Juppy"
+NOME = "El mañana!"
 FONTE = 'arial'
 HS_FILE = "highscore.txt"
 SPRITESHEET = "p1_spritesheet.png"
@@ -54,21 +54,36 @@ LISTA_aleatorias_inciais = [(60, 180, 100, 20),
 class Spritessheets:
     #carregando e lendo as sprites na imagem geral 
     def __init__(self, filename) : 
-        self.spritesheet = pg.image.load(filename).convert()
+        self.spritesheet = pg.image.load(filename).convert_alpha()
 
     def get_image(self, x, y, width, height):
         #pega uma imagem do spritesheet 
-        image = pg.Surface((width, height))
+        image = pg.Surface((width, height), pg.SRCALPHA)
         image.blit(self.spritesheet, (0,0), (x, y, width, height) )
+
+        #defininndo tamanho
+        largura = int(width/(1.4))
+        altura = int(height/(1.4))
+        image = pg.transform.scale(image, (largura, altura))
+
         return image
 
 # jogador#
 class Famoso(pg.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, spritesheet):
         pg.sprite.Sprite.__init__(self)
-        self.game = game
-        self.image = self.game.spritesheet.get_image(0, 196, 66, 92)
-        #self.image.fill(ORANGE)
+        self.spritesheet = spritesheet
+
+        #controlando frames
+        self.walking = False
+        self.jumpping = False
+        self.current_frame = 0
+        self.last_update = 0
+
+        self.carrega_imagens()
+
+        #pegando a imagem 
+        self.image = self.front[0]
         self.rect = self.image.get_rect()  # gera a posição e tamanho da imagem
         self.maior_altura = self.rect.bottom
 
@@ -79,8 +94,33 @@ class Famoso(pg.sprite.Sprite):
         self.Vx = 0
         self.grav = GRAVIDADE
 
+    def carrega_imagens(self):
+        
+        #____pulo
+        self.jump = self.spritesheet.get_image(438, 93, 67, 94) #pver se queremos essa ou a outras + se vira para direita ou não 
+        
+        
+        #____frente/parado 
+        self.front = [self.spritesheet.get_image(0, 196, 66, 92), 
+                    self.spritesheet.get_image(67, 196, 66, 92)]
+
+        #for frame in (self.front):
+         
+         #  frame.set.colorkey(BLACK)
+        
+        #____andando
+        self.walk_r = [self.spritesheet.get_image(0, 98, 72, 97), 
+                        self.spritesheet.get_image(73, 98, 72, 97)]
+
+        self.walk_l = []
+        for frame in self.walk_r:
+            #frame.set.colorkey(BLACK)
+            self.walk_l.append(pg.transform.flip(frame, True, False)) #vira horizontalmente mas não verticalmente
+
+        
     def update(self):
 
+        self.animacao()
         # pulo
         self.Vy += self.grav
         # equações do movimento
@@ -97,6 +137,14 @@ class Famoso(pg.sprite.Sprite):
             self.rect.left = 0
         if self.rect.left < 0:
             self.rect.right = WIDTH
+
+    def animacao(self):
+        agora = pg.time.get_ticks()
+        if not self.jumpping and not self.walking:
+            if agora - self.last_update > 350:   #checa se está na hora de mudar os frames 
+                self.last_update = agora           # se estiver o tempo do último update de imagem se tona o momento 
+                self.current_frame = (self.current_frame + 1) % len(self.front)   #pra trocar a frame
+                self.image = self.front[self.current_frame] #troca a imagem para o frame correto 
 
     def trata_eventos(self, event):  # Eventos para o jogador
 
@@ -118,7 +166,7 @@ class Famoso(pg.sprite.Sprite):
 class Notas_regulares(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((w, h))
+        self.image = pg.Surface((w, h), pg.SRCALPHA)
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -128,7 +176,7 @@ class Notas_regulares(pg.sprite.Sprite):
 class Notas_aleatorias(pg.sprite.Sprite):
     def __init__(self, x, y, w, h):
         pg.sprite.Sprite.__init__(self)
-        self.image = pg.Surface((w, h))
+        self.image = pg.Surface((w, h), pg.SRCALPHA)
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -141,7 +189,10 @@ class Game:
 
         # =====Iniciações
         pg.init()
-        self.jogador = Famoso()
+
+         # ======tela
+        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+
         self.all_sprites = pg.sprite.pygame.sprite.Group()
         
         pg.mixer.init()  # musica
@@ -150,8 +201,8 @@ class Game:
         self.nome_fonte = pg.font.match_font(FONTE)
         self.load_data()
 
-        # ======tela
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+        self.jogador = Famoso(self.spritesheet)
+       
         # self.backgrond = pg.image.load("imagem.fundo.png").convert()
         pg.display.set_caption(NOME)
         self.clock = pg.time.Clock()  # tempo
@@ -296,7 +347,7 @@ class Game:
     def tela_inicial(self):
 
         self.screen.fill(LIGHTBLUE)
-        self.draw_textos("Juppy!", 48, WHITE, WIDTH / 2, HEIGHT / 4)
+        self.draw_textos(NOME, 48, WHITE, WIDTH / 2, HEIGHT / 4)
 
         # == Instruções
         self.draw_textos("Use as setas para se mover", 22, GREEN, WIDTH / 2, HEIGHT / 2)
