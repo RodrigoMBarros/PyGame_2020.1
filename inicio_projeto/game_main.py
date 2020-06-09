@@ -10,11 +10,11 @@ FONTE = 'arial'
 HS_FILE = "highscore.txt"
 SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
-
+#NAVE_LAYER = 0
 # == Player properies
 FAMOSO_ACEL = 8
 GRAVIDADE = 1
-PULO_FAMOSO = 20
+PULO_FAMOSO = 22
 
 # == Cores
 WHITE = (255, 255, 255)
@@ -31,7 +31,7 @@ LIGHTBLUE = (10, 155, 155)
 
 # === Formatando plataformas
 
-LISTA_plataformas_iniciais = [(0, HEIGHT - 40),
+LISTA_plataformas_iniciais = [(0, HEIGHT - 60),
                               (200, 440),
                               (125, 320),
                               (350, 200),
@@ -80,7 +80,7 @@ class Spritessheets_plat:
         image.blit(self.spritesheet, (0,0), (x, y, width, height) )
 
         #defininndo tamanho
-        largura = int(width/(0.75))
+        largura = int(width/(0.65))
         altura = int(height//2)
         image = pg.transform.scale(image, (largura, altura))
 
@@ -97,6 +97,7 @@ class Spritessheets_plat:
         image = pg.transform.scale(image, (largura, altura))
 
         return image
+
 
 # jogador#
 class Famoso(pg.sprite.Sprite):
@@ -340,9 +341,9 @@ class Game:
 
         # Fazer a tela rodar quando o jogador chegar a 1/4 da tela
         if self.jogador.rect.top <= HEIGHT / 4:
-            self.jogador.rect.y += abs(self.jogador.Vy)
+            self.jogador.rect.y += max(abs(self.jogador.Vy), 2)
             for plat in self.platforms_R:
-                plat.rect.y += abs(self.jogador.Vy)
+                plat.rect.y += max(abs(self.jogador.Vy), 2)
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas regulares
                     width = random.randrange(50, 100)
                     p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))
@@ -355,7 +356,7 @@ class Game:
                     self.score += 10
 
             for plat in self.platforms_A:
-                plat.rect.y += abs(self.jogador.Vy)
+                plat.rect.y += max(abs(self.jogador.Vy), 2)
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas aleatorias
                     width = random.randrange(50, 100)
                     p = Notas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (random.randrange(-HEIGHT, -20)))
@@ -394,8 +395,8 @@ class Game:
         # Função para desenvolver imagens
 
         self.screen.fill(LIGHTBLUE)
-        # self.screen.blit(backgrond,(0,0))
         self.all_sprites.draw(self.screen)
+        self.screen.blit(self.jogador.image, self.jogador.rect)
         self.draw_textos(str(self.score), 22, WHITE, WIDTH / 2, 15)
         pg.display.flip()  # uma desenhada e outra em construção #*after* drawuing everything
 
@@ -438,7 +439,7 @@ class Game:
             with open(path.join(self.dir, HS_FILE), 'w') as ah:
                 ah.write(str(self.score))
         else :
-            self.draw_textos("NOVO HIGH SCORE!", 22, WHITE, WIDTH/2, (HEIGHT/2 + 40))
+            self.draw_textos("HIGH SCORE: " + str(self.highscore), 22, WHITE, WIDTH/2, (HEIGHT/2 + 40))
         pg.display.flip()
         self.espera_acao()
 
