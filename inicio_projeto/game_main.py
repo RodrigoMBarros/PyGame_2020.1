@@ -264,7 +264,7 @@ class Game:
          # ======tela
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
-        self.all_sprites = pg.sprite.pygame.sprite.Group()
+        self.all_sprites = pg.sprite.Group()
         
         pg.mixer.init()  # musica
         self.rodando = True  # define o looping do gameplay
