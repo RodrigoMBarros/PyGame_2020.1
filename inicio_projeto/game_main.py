@@ -128,7 +128,7 @@ class Famoso(pg.sprite.Sprite):
     def carrega_imagens(self):
         
         #____pulo
-        self.jump = self.spritesheet.get_image(438, 93, 67, 94) #pver se queremos essa ou a outras + se vira para direita ou não 
+        self.jump = [self.spritesheet.get_image(438, 93, 67, 94), self.spritesheet.get_image(219, 0, 72, 97)] #pver se queremos essa ou a outras + se vira para direita ou não 
         
         
         #____frente/parado 
@@ -182,43 +182,47 @@ class Famoso(pg.sprite.Sprite):
                 self.Vx = 0
 
     def animacao(self):
-            agora = pg.time.get_ticks()
+        agora = pg.time.get_ticks()
 
-            #__ ajustando andada 
-            if self.Vx != 0:
-                self.walking = True 
-            else:
-                self.walking = False
+        #__ ajustando andada 
+        if self.Vx != 0:
+            self.walking = True 
+        else:
+            self.walking = False
 
-            if self.walking:
-                if agora - self.last_update > 200:
-                    self.last_update = agora
-                    self.current_frame = (self.current_frame + 1) % len(self.walk_r)
+        if self.walking:
+            if agora - self.last_update > 200:
+                self.last_update = agora
+                self.current_frame = (self.current_frame + 1) % len(self.walk_r)
                     
 
-                    if self.Vx > 0 :
-                        self.image = self.walk_r[self.current_frame]
-                    elif self.Vx < 0 :
-                        self.image = self.walk_l[self.current_frame]
+        if self.Vx > 0 :
+            self.image = self.walk_r[self.current_frame]
+        elif self.Vx < 0 :
+            self.image = self.walk_l[self.current_frame]
+            
+        if self.Vy != 0 :
+            self.jumpping = True 
 
-            #if hits == False and hits2 == False :
-                self.jumpping = True 
-            #else:
-                self.jupping = False
-
-            if self.Vy != 0:
-               if agora - self.last_update > 200:
+        if self.jumpping:
+            if agora - self.last_update > 200:
+                if self.Vy < 0 :
                     self.last_update = agora
-                    self.current_frame = (self.current_frame + 1) % len(self.walk_r)
-                    self.image = self.jump
+                    self.image = self.jump[0]
+                elif self.Vy > 0 :
+                    self.last_update = agora
+                    self.image = self.jump[1]
+
                     
                     
                 
-            if not self.jumpping and not self.walking:
-                if agora - self.last_update > 450:   #checa se está na hora de mudar os frames 
-                    self.last_update = agora           # se estiver o tempo do último update de imagem se tona o momento 
-                    self.current_frame = (self.current_frame + 1) % len(self.front)   #pra trocar a frame
-                    self.image = self.front[self.current_frame] #troca a imagem para o frame correto 
+        if not self.jumpping and not self.walking :
+            print("chegou aqui")
+            self.image = self.front[0] #troca a imagem para o frame correto
+            if agora - self.last_update > 450:   #checa se está na hora de mudar os frames 
+                self.last_update = agora           # se estiver o tempo do último update de imagem se tona o momento 
+                self.current_frame = (self.current_frame + 1) % len(self.front)   #pra trocar a frame
+                 
 
 
 
@@ -323,6 +327,8 @@ class Game:
     def updates(self):
         # faz updates
         self.all_sprites.update()
+
+#__________________________________________________________________________________________________________________________________________________
         # checando colisões
         hits = pg.sprite.spritecollide(self.jogador, self.platforms_R, False)  # contato com as plataformas regulares
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
@@ -330,43 +336,57 @@ class Game:
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
             
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (self.jogador.maior_altura < hits[0].rect.top):
+
                 self.jogador.rect.bottom = hits[0].rect.top
+                self.jogador.image = self.jogador.front[0]
+                self.jumpping = False
+                self.walking = False
+
                 self.jogador.Vy = -PULO_FAMOSO
 
         if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
 
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (self.jogador.maior_altura < hits2[0].rect.top):
                 self.jogador.rect.bottom = hits2[0].rect.top
+                self.jumpping = False
+                self.walking = False
                 self.jogador.Vy = -PULO_FAMOSO
-
-        # Fazer a tela rodar quando o jogador chegar a 1/4 da tela
+                
+        #___Fazer a tela rodar quando o jogador chegar a 1/4 da tela___
         if self.jogador.rect.top <= HEIGHT / 4:
             self.jogador.rect.y += max(abs(self.jogador.Vy), 2)
+#__________________________________________________________________________________________________________________________________________________
             for plat in self.platforms_R:
-                plat.rect.y += max(abs(self.jogador.Vy), 2)
+                plat.rect.y += max(abs(self.jogador.Vy), 2)  #para ter um valor coerente 
+
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas regulares
                     width = random.randrange(50, 100)
-                    p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))
+                    p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))  #sorteando posição das plataformas 
+
                     while pg.sprite.spritecollide(p, self.platforms_R, False) or \
                             pg.sprite.spritecollide(p, self.platforms_A, False):
                         p = Notas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (plat.rect.y - HEIGHT*2))
-                    self.platforms_R.add(p)
+
+                    self.platforms_R.add(p)  #addicionando as novas plataformas aos grupos 
                     self.all_sprites.add(p)
                     plat.kill()
-                    self.score += 10
-
+                    self.score += 5  #matou, ganhou plataforma 
+#__________________________________________________________________________________________________________________________________________________
             for plat in self.platforms_A:
                 plat.rect.y += max(abs(self.jogador.Vy), 2)
+
                 if plat.rect.y >= HEIGHT:   # recolocando as plataformas aleatorias
                     width = random.randrange(50, 100)
                     p = Notas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (random.randrange(-HEIGHT, -20)))
+
                     while pg.sprite.spritecollide(p, self.platforms_A, False) or \
                             pg.sprite.spritecollide(p, self.platforms_R, False):
                         p = Notas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)), (random.randrange(-HEIGHT, -20)))
+
                     self.platforms_A.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
-                    self.score += 10
+                    self.score += 5
 
         # Die
 
@@ -382,8 +402,10 @@ class Game:
 
     def events(self):
         # Process input (events)
+
         events = pg.event.get()
         for event in events:
+
             # checando para sair do jogo
             if event.type == pg.QUIT:
                 self.rodando = False
