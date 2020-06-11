@@ -10,7 +10,7 @@ FONTE = 'arial'
 HS_FILE = "highscore.txt"
 SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
-# NAVE_LAYER = 0
+
 # == Player properies
 JOGADOR_ACEL = 8
 GRAVIDADE = 1
@@ -26,6 +26,7 @@ GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 97, 3)
 LIGHTBLUE = (10, 155, 155)
+DARKBLUE = (25, 25, 100)
 
 # assets
 
@@ -37,17 +38,18 @@ LISTA_plataformas_iniciais = [(0, HEIGHT - 60),
                               (350, 200),
                               (175, 80),
                               (100, -30),
-                              (300, -140),
                               (400, -250),
                               (350, -360),
                               (175, -470)]
 
 LISTA_aleatorias_inciais = [(60, 180),
                             (375, 40),
-                            (400, 350),
-                            (30, -250)]
+                            (400, 350)]
 
-LISTA_super_pulo_incial = [(100, -100)]
+LISTA_super_pulo_incial = [(50, -100)]
+
+LISTA_quebradicas_inciais = [(300, -140),
+                             (30, -250)]
 
 
 # ==== Classes
@@ -211,7 +213,6 @@ class Jogador(pg.sprite.Sprite):
                     self.image = self.jump[1]
 
         if not self.jumpping and not self.walking:
-            print("chegou aqui")
             self.image = self.front[0]  # troca a imagem para o frame correto
             if agora - self.last_update > 450:  # checa se está na hora de mudar os frames
                 self.last_update = agora  # se estiver o tempo do último update de imagem se tona o momento
@@ -245,6 +246,16 @@ class Plataformas_super_pulo(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
 
         self.image = spritesheet_p.get_image_plat2(504, 0, 70, 70)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Plataformas_quebradicas(pg.sprite.Sprite):
+    def __init__(self, spritesheet_p, x, y):
+        pg.sprite.Sprite.__init__(self)
+
+        self.image = spritesheet_p.get_image_plat2(0, 792, 70, 70)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -302,6 +313,7 @@ class Game:
         self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
         self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
         self.platforms_P = pg.sprite.Group()  # grupo para as plataformas super pulo
+        self.platforms_Q = pg.sprite.Group()  # grupo para as plataformas quebradicas
 
         for plat in LISTA_plataformas_iniciais:
             p = Plataformas_regulares(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
@@ -317,6 +329,11 @@ class Game:
             p = Plataformas_super_pulo(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
             self.platforms_P.add(p)
+
+        for plat in LISTA_quebradicas_inciais:
+            p = Plataformas_quebradicas(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
+            self.all_sprites.add(p)
+            self.platforms_Q.add(p)
 
     def run(self):
         # game Loop
@@ -336,6 +353,9 @@ class Game:
         hits = pg.sprite.spritecollide(self.jogador, self.platforms_R, False)  # contato com as plataformas regulares
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
         hits3 = pg.sprite.spritecollide(self.jogador, self.platforms_P, False)  # contato com as plataformas super pulo
+        hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q, False)  # contato com as plataformas quebradicas
+
+
 
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
@@ -362,21 +382,33 @@ class Game:
                 self.walking = False
                 self.jogador.Vy = -SUPER_PULO
 
+        if hits4:  # verifica impacto entre jogador e as plataformas quebradicas para realizar o pulo
+
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits4[0].rect.top) and (
+                    self.jogador.maior_altura < hits4[0].rect.top):
+                hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q,
+                                                True)  # destroi quebradica se vier de cima
+                self.jogador.rect.bottom = hits4[0].rect.top
+                self.jumpping = False
+                self.walking = False
+                self.jogador.Vy = -PULO_JOGADOR
+
         # ___Fazer a tela rodar quando o jogador chegar a 1/4 da tela___
         if self.jogador.rect.top <= HEIGHT / 4:
             self.jogador.rect.y += max(abs(self.jogador.Vy), 2)
             # __________________________________________________________________________________________________________________________________________________
-            for plat in self.platforms_R:
+            for plat in self.platforms_R:  # recolocando as plataformas regulares
                 plat.rect.y += max(abs(self.jogador.Vy), 2)  # para ter um valor coerente
 
-                if plat.rect.y >= HEIGHT:  # recolocando as plataformas regulares
+                if plat.rect.y >= HEIGHT:
                     width = random.randrange(50, 100)
                     p = Plataformas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
                                               (plat.rect.y - HEIGHT * 2))  # sorteando posição das plataformas
 
                     while pg.sprite.spritecollide(p, self.platforms_R, False) or \
                             pg.sprite.spritecollide(p, self.platforms_A, False) or \
-                            pg.sprite.spritecollide(p, self.platforms_P, False):
+                            pg.sprite.spritecollide(p, self.platforms_P, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_Q, False):
                         p = Plataformas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
                                                   (plat.rect.y - HEIGHT * 2))
 
@@ -385,43 +417,83 @@ class Game:
                     plat.kill()
                     self.score += 5  # matou, ganhou plataforma
             # __________________________________________________________________________________________________________________________________________________
-            for plat in self.platforms_A:
+            for plat in self.platforms_A:  # recolocando as plataformas aleatorias
                 plat.rect.y += max(abs(self.jogador.Vy), 2)
 
-                if plat.rect.y >= HEIGHT:  # recolocando as plataformas aleatorias
+                if plat.rect.y >= HEIGHT:
                     width = random.randrange(50, 100)
                     p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                               (random.randrange(-HEIGHT, -200)))
+                                               (random.randrange(-HEIGHT, -20)))
 
                     while pg.sprite.spritecollide(p, self.platforms_A, False) or \
                             pg.sprite.spritecollide(p, self.platforms_R, False) or \
-                            pg.sprite.spritecollide(p, self.platforms_P, False):
+                            pg.sprite.spritecollide(p, self.platforms_P, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_Q, False):
                         p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                                   (random.randrange(-HEIGHT, -200)))
+                                                   (random.randrange(-HEIGHT, -20)))
 
                     self.platforms_A.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
                     self.score += 5
 
-            for plat in self.platforms_P:
+            for plat in self.platforms_P:  # recolocando a plataforma super pulo
                 plat.rect.y += max(abs(self.jogador.Vy), 2)
 
-                if plat.rect.y >= HEIGHT:  # recolocando a plataforma super pulo
+                if plat.rect.y >= HEIGHT:
                     width = random.randrange(50, 100)
                     p = Plataformas_super_pulo(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                               (random.randrange(-2*HEIGHT, -20)))
+                                               (random.randrange(-2 * HEIGHT, -200)))
 
                     while pg.sprite.spritecollide(p, self.platforms_A, False) or \
                             pg.sprite.spritecollide(p, self.platforms_R, False) or \
-                            pg.sprite.spritecollide(p, self.platforms_P, False):
-                        p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                                   (random.randrange(-2*HEIGHT, -20)))
+                            pg.sprite.spritecollide(p, self.platforms_P, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_Q, False):
+                        p = Plataformas_super_pulo(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                   (random.randrange(-2 * HEIGHT, -200)))
 
                     self.platforms_P.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
                     self.score += 5
+
+            for plat in self.platforms_Q:  # recolocando as plataformas quebradicas
+                plat.rect.y += max(abs(self.jogador.Vy), 2)
+
+                if plat.rect.y >= HEIGHT:  # cria mais se sairem fora da tela
+                    width = random.randrange(50, 100)
+                    p = Plataformas_quebradicas(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                (random.randrange(-HEIGHT, -200)))
+
+                    while pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_P, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_Q, False):
+                        p = Plataformas_quebradicas(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                    (random.randrange(-HEIGHT, -200)))
+
+                    self.platforms_Q.add(p)
+                    self.all_sprites.add(p)
+                    plat.kill()
+                    self.score += 5
+
+                if len(self.platforms_Q) < 2:  # cria mais quebradicas se as outras forem destruidas
+                    width = random.randrange(50, 100)
+                    p = Plataformas_quebradicas(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                (random.randrange(-HEIGHT, -200)))
+
+                    while pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_P, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_Q, False):
+                        p = Plataformas_quebradicas(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                    (random.randrange(-HEIGHT, -200)))
+
+                    self.platforms_Q.add(p)
+                    self.all_sprites.add(p)
+                    self.score += 5
+
+
 
         # Die
 
@@ -483,11 +555,11 @@ class Game:
 
     def tela_final(self):
 
-        # Função para definir a tela final de gameover#
+        # Função para definir a tela final de gameover
 
         if self.rodando:  # se quiser sair não tem que mostrar a tela final
             return
-        self.screen.fill(LIGHTBLUE)
+        self.screen.fill(DARKBLUE)
         # resultados
         self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT / 4)
         self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH / 2, HEIGHT / 2)
