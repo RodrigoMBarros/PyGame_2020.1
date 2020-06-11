@@ -15,6 +15,7 @@ SPRITESHEET_PLAT = "tiles_spritesheet.png"
 JOGADOR_ACEL = 8
 GRAVIDADE = 1
 PULO_JOGADOR = 22
+SUPER_PULO = 40
 
 # == Cores
 WHITE = (255, 255, 255)
@@ -44,8 +45,9 @@ LISTA_plataformas_iniciais = [(0, HEIGHT - 60),
 LISTA_aleatorias_inciais = [(60, 180),
                             (375, 40),
                             (400, 350),
-                            (30, -250),
-                            (370, -450)]
+                            (30, -250)]
+
+LISTA_super_pulo_incial = [(100, -100)]
 
 
 # ==== Classes
@@ -221,9 +223,8 @@ class Jogador(pg.sprite.Sprite):
 class Plataformas_regulares(pg.sprite.Sprite):
     def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
-        self.spritesheet_p = spritesheet_p
 
-        self.image = self.spritesheet_p.get_image_plat(144, 648, 70, 70)
+        self.image = spritesheet_p.get_image_plat(144, 648, 70, 70)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -234,6 +235,16 @@ class Plataformas_aleatorias(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
 
         self.image = spritesheet_p.get_image_plat2(144, 648, 70, 70)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Plataformas_super_pulo(pg.sprite.Sprite):
+    def __init__(self, spritesheet_p, x, y):
+        pg.sprite.Sprite.__init__(self)
+
+        self.image = spritesheet_p.get_image_plat2(504, 0, 70, 70)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -290,6 +301,7 @@ class Game:
         # === Grupo de spreites plataformas
         self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
         self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
+        self.platforms_P = pg.sprite.Group()  # grupo para as plataformas super pulo
 
         for plat in LISTA_plataformas_iniciais:
             p = Plataformas_regulares(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
@@ -300,6 +312,11 @@ class Game:
             p = Plataformas_aleatorias(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
             self.platforms_A.add(p)
+
+        for plat in LISTA_super_pulo_incial:
+            p = Plataformas_super_pulo(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
+            self.all_sprites.add(p)
+            self.platforms_P.add(p)
 
     def run(self):
         # game Loop
@@ -318,26 +335,32 @@ class Game:
         # checando colisões
         hits = pg.sprite.spritecollide(self.jogador, self.platforms_R, False)  # contato com as plataformas regulares
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
+        hits3 = pg.sprite.spritecollide(self.jogador, self.platforms_P, False)  # contato com as plataformas super pulo
 
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
-
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
                     self.jogador.maior_altura < hits[0].rect.top):
                 self.jogador.rect.bottom = hits[0].rect.top
                 self.jogador.image = self.jogador.front[0]
                 self.jumpping = False
                 self.walking = False
-
                 self.jogador.Vy = -PULO_JOGADOR
 
         if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
-
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
                     self.jogador.maior_altura < hits2[0].rect.top):
                 self.jogador.rect.bottom = hits2[0].rect.top
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
+
+        if hits3:  # verifica impacto entre jogador e a plataforma super_pulo para realizar o super pulo
+            if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits3[0].rect.top) and (
+                    self.jogador.maior_altura < hits3[0].rect.top):
+                self.jogador.rect.bottom = hits3[0].rect.top
+                self.jumpping = False
+                self.walking = False
+                self.jogador.Vy = -SUPER_PULO
 
         # ___Fazer a tela rodar quando o jogador chegar a 1/4 da tela___
         if self.jogador.rect.top <= HEIGHT / 4:
@@ -352,7 +375,8 @@ class Game:
                                               (plat.rect.y - HEIGHT * 2))  # sorteando posição das plataformas
 
                     while pg.sprite.spritecollide(p, self.platforms_R, False) or \
-                            pg.sprite.spritecollide(p, self.platforms_A, False):
+                            pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_P, False):
                         p = Plataformas_regulares(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
                                                   (plat.rect.y - HEIGHT * 2))
 
@@ -367,14 +391,34 @@ class Game:
                 if plat.rect.y >= HEIGHT:  # recolocando as plataformas aleatorias
                     width = random.randrange(50, 100)
                     p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                               (random.randrange(-HEIGHT, -20)))
+                                               (random.randrange(-HEIGHT, -200)))
 
                     while pg.sprite.spritecollide(p, self.platforms_A, False) or \
-                            pg.sprite.spritecollide(p, self.platforms_R, False):
+                            pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_P, False):
                         p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
-                                                   (random.randrange(-HEIGHT, -20)))
+                                                   (random.randrange(-HEIGHT, -200)))
 
                     self.platforms_A.add(p)
+                    self.all_sprites.add(p)
+                    plat.kill()
+                    self.score += 5
+
+            for plat in self.platforms_P:
+                plat.rect.y += max(abs(self.jogador.Vy), 2)
+
+                if plat.rect.y >= HEIGHT:  # recolocando a plataforma super pulo
+                    width = random.randrange(50, 100)
+                    p = Plataformas_super_pulo(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                               (random.randrange(-2*HEIGHT, -20)))
+
+                    while pg.sprite.spritecollide(p, self.platforms_A, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_R, False) or \
+                            pg.sprite.spritecollide(p, self.platforms_P, False):
+                        p = Plataformas_aleatorias(self.spritesheet_p, (random.randrange(0, WIDTH - width)),
+                                                   (random.randrange(-2*HEIGHT, -20)))
+
+                    self.platforms_P.add(p)
                     self.all_sprites.add(p)
                     plat.kill()
                     self.score += 5
