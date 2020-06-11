@@ -220,6 +220,14 @@ class Jogador(pg.sprite.Sprite):
 
     # Plataformas
 
+class Setas(pg.sprite.Sprite):
+    def __init__(self, spritesheet_s, x, y):
+        pg.sprite.Sprite.__init__(self)
+
+        self.image = spritesheet_s.get_image_plat(144, 648, 70, 70)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 class Plataformas_regulares(pg.sprite.Sprite):
     def __init__(self, spritesheet_p, x, y):
@@ -272,6 +280,7 @@ class Game:
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
         self.all_sprites = pg.sprite.Group()
+        self.demonstration_sprites = pg.sprite.Group()
 
         pg.mixer.init()  # musica
         self.rodando = True  # define o looping do gameplay
@@ -354,8 +363,6 @@ class Game:
         hits2 = pg.sprite.spritecollide(self.jogador, self.platforms_A, False)  # contato com as plataformas aleatorias
         hits3 = pg.sprite.spritecollide(self.jogador, self.platforms_P, False)  # contato com as plataformas super pulo
         hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q, False)  # contato com as plataformas quebradicas
-
-
 
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
@@ -493,8 +500,6 @@ class Game:
                     self.all_sprites.add(p)
                     self.score += 5
 
-
-
         # Die
 
         if self.jogador.rect.bottom > HEIGHT:
@@ -543,13 +548,38 @@ class Game:
 
     def tela_inicial(self):
 
-        self.screen.fill(LIGHTBLUE)
-        self.draw_textos(NOME, 48, WHITE, WIDTH / 2, HEIGHT / 4)
+        self.screen.fill(DARKBLUE)
+        self.draw_textos(NOME, 80, WHITE, WIDTH / 2, HEIGHT / 4)
 
-        # == Instruções
-        self.draw_textos("Use as setas para se mover", 22, GREEN, WIDTH / 2, HEIGHT / 2)
-        self.draw_textos("Precione espaço para jogar", 22, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
+        # Instruções
+        self.draw_textos("Precione espaço para instruções", 30, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
         self.draw_textos(("High Score :" + str(self.highscore)), 22, WHITE, (WIDTH / 2), 15)
+        pg.display.flip()
+        self.espera_acao()
+
+    def tela_instrucoes(self):
+
+        self.screen.fill(DARKBLUE)
+        self.draw_textos("Use as setas para se mover", 22, WHITE, 350, 80)
+        self.draw_textos("<=   =>", 60, GREEN, 140, 60)
+
+        # desenha e escreve sobre a plataforma normal
+        self.draw_textos("Pule nas plataformas para subir", 22, WHITE, 350, 180)
+        self.demonstration_sprites.add(Plataformas_regulares(self.spritesheet_p, 80, 180))
+
+        # desenha e escreve sobre a plataforma quebradiça
+        self.draw_textos("Plataformas de madeira", 22, WHITE, 350, 280)
+        self.draw_textos("só podem ser usadas uma vez", 22, WHITE, 350, 300)
+        self.demonstration_sprites.add(Plataformas_quebradicas(self.spritesheet_p, 100, 290))
+
+        # desenha e escreve sobre a plataforma de super pulo
+        self.draw_textos("Plataformas vermelhas te", 22, WHITE, 350, 380)
+        self.draw_textos("fazem realizar um super pulo", 22, WHITE, 350, 400)
+        self.demonstration_sprites.add(Plataformas_super_pulo(self.spritesheet_p, 100, 390))
+
+        self.draw_textos("Precione espaço para começar", 30, GREEN, WIDTH / 2, (HEIGHT * 5 / 6))
+
+        self.demonstration_sprites.draw(self.screen)
         pg.display.flip()
         self.espera_acao()
 
@@ -595,8 +625,10 @@ class Game:
 
 g = Game()  # o jogo de fato
 while g.jogo:
-    g.tela_inicial()  # gera menu inicial e opcoes
-    g.refresh()  # reniciar apenas no novo jogo
+    g.tela_inicial()  # gera menu inicial e high score
+    if g.jogo:  # garante que da pra fechar o jogo no menu inicial
+        g.tela_instrucoes()  # gera menu de instruções
+        g.refresh()  # reniciar apenas no novo jogo
     while g.rodando:
         g.run()  # gera a gameplay de fato
 
