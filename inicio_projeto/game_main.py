@@ -355,13 +355,12 @@ class Game:
             self.all_sprites.add(p)
             self.platforms_Q.add(p)
         
-        
+        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
         self.run()
 
     def run(self):
         # game Loop
         self.clock.tick(FPS)
-        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
         pg.mixer.music.play(loops = -1)
         # ==== Chamando events e as tres funções básicas do game loop que se conversam
         self.events()  # recebe comandos do taclado e mouse (controle do jogador)
@@ -648,7 +647,6 @@ class Game:
 
 
 g = Game()  # o jogo de fato
-
 while g.jogo:
     g.tela_inicial()  # gera menu inicial e high score
     if g.jogo:  # garante que da pra fechar o jogo no menu inicial
