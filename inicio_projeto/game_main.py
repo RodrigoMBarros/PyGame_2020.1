@@ -316,6 +316,7 @@ class Game:
 
         #carrega sons 
         self.snd_dir = path.join(self.dir, 'snd')
+        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
         #self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, PULO_SND))
         
 
@@ -355,18 +356,16 @@ class Game:
             self.all_sprites.add(p)
             self.platforms_Q.add(p)
         
-        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
         self.run()
 
     def run(self):
         # game Loop
         self.clock.tick(FPS)
-        pg.mixer.music.play(loops = -1)
         # ==== Chamando events e as tres funções básicas do game loop que se conversam
         self.events()  # recebe comandos do taclado e mouse (controle do jogador)
         self.updates()
         self.draw()
-        pg.mixer.music.fadeout(500)
+        #pg.mixer.music.fadeout(500)
 
     def updates(self):
         # faz updates
@@ -523,6 +522,7 @@ class Game:
         # Die
 
         if self.jogador.rect.bottom > HEIGHT:
+            pg.mixer.music.fadeout(500)
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.jogador.Vy, 10)
 
@@ -610,9 +610,12 @@ class Game:
         if self.rodando:  # se quiser sair não tem que mostrar a tela final
             return
 
-        #pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
+        pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
+
+        pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
+        pg.mixer.music.play(loops = -1)
         self.screen.fill(BLUEM)
-        self.over_sound.play()
+        
         # resultados
         self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT / 4)
         self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH / 2, HEIGHT / 2)
@@ -626,6 +629,7 @@ class Game:
             self.draw_textos("HIGH SCORE: " + str(self.highscore), 22, WHITE, WIDTH / 2, (HEIGHT / 2 + 40))
         pg.display.flip()
         self.espera_acao()
+        pg.mixer.music.fadeout(500)
 
     def espera_acao(self):
 
@@ -652,10 +656,12 @@ while g.jogo:
     if g.jogo:  # garante que da pra fechar o jogo no menu inicial
         g.tela_instrucoes()  # gera menu de instruções
         g.refresh()  # reniciar apenas no novo jogo
+    pg.mixer.music.play(loops = -1)
     while g.rodando:
         g.run()  # gera a gameplay de fato
 
     if g.jogo:  # garante que da pra fechar o jogo no meio do run
+        #pg.mixer.music.play(loops = -1)
         g.tela_final()  # tela do game over
     continue
 pg.quit()
