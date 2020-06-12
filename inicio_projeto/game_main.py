@@ -12,9 +12,11 @@ HS_FILE = "highscore.txt"
 #FILES 
 SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
-MUSICA = "fell_good.wave"
-#PULO_SND = 
-GAME_OVER_SND = "never_giveup.wave"
+MUSICA = "fell_good.wav"
+PULO_SND = "Jump.wav"
+SUPER_PULO = 'Jump_super.wav'
+QUEBRA_SND = 'break.wav'
+GAME_OVER_SND = "never_giveup.wav"
 
 # == Player properies
 JOGADOR_ACEL = 8
@@ -36,7 +38,7 @@ BLUEM = (138,43, 226)
 
 # assets
 
-# === Formatando plataformas
+# === Formatando plataformas - listas iniciais para cada um dos tipos 
 
 LISTA_plataformas_iniciais = [(0, HEIGHT - 60),
                               (200, 440),
@@ -62,8 +64,13 @@ LISTA_quebradicas_inciais = [(300, -140),
 
 # Player sprites #
 class Spritessheets:
+
+    """ Classe responsável por carregar a spritesheet do jogador(bonequinho),
+        nela já é ajustado os tamanhos e cor de fundo"""
+
     # carregando e lendo as sprites na imagem geral
     def __init__(self, filename):
+
         self.spritesheet = pg.image.load(filename).convert_alpha()
 
     def get_image(self, x, y, width, height):
@@ -80,6 +87,10 @@ class Spritessheets:
 
 
 class Spritessheets_plat:
+
+    """Classe responsável por carregar e chamar as imagens contidas na spritesheet dos titles, 
+        ou seja, as plataformas, aqui também são ajustados tamanhos"""
+
     # carregando e lendo as sprites na imagem geral
     def __init__(self, filename):
         self.spritesheet = pg.image.load(filename).convert_alpha()
@@ -111,7 +122,12 @@ class Spritessheets_plat:
 
 # jogador#
 class Jogador(pg.sprite.Sprite):
+
+    """Classe do jogador"""
+
     def __init__(self, spritesheet):
+
+        """Inicia suas imagens, modos de animação, e defini variáveis como velocidade, tamanhos e gravidade """
         pg.sprite.Sprite.__init__(self)
         self.spritesheet = spritesheet
 
@@ -137,6 +153,9 @@ class Jogador(pg.sprite.Sprite):
 
     def carrega_imagens(self):
 
+        """Pega as imagens da spritesheet com as cordenadas de posição (x, y) e também o tamanho de recorte (largura, altura).
+            Cada sequência de imagem seria uma determinada animação"""
+
         # ____pulo
         self.jump = [self.spritesheet.get_image(438, 93, 67, 94), self.spritesheet.get_image(219, 0, 72,
                                                                                              97)]  # pver se queremos essa ou a outras + se vira para direita ou não
@@ -154,6 +173,9 @@ class Jogador(pg.sprite.Sprite):
             self.walk_l.append(pg.transform.flip(frame, True, False))  # vira horizontalmente mas não verticalmente
 
     def update(self):
+
+        """responsável por fazer o update dos movimentos de animação do jogador. Definir limites de tela e movimento por ela. Controle da altura
+            máxima do jogador para o controle de toques. e também updates e controles de como o boneco se comporta com as equações de movimento"""
 
         self.animacao()
         # pulo
@@ -175,6 +197,9 @@ class Jogador(pg.sprite.Sprite):
 
     def trata_eventos(self, event):  # Eventos para o jogador
 
+        """Recebe os eventos registrados no loop principal do jogo, e assim analisa quais movimentos são possíveis para o jogador
+            garantindo o movimento horixontal"""
+
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_LEFT:
                 self.Vx = -JOGADOR_ACEL
@@ -188,6 +213,10 @@ class Jogador(pg.sprite.Sprite):
                 self.Vx = 0
 
     def animacao(self):
+
+        """Trabalha com um relógio de funcionamento, e assim controla a partir de ifs, o movimento do jogador nas animações
+            sendo verticalmente, as pernas nas andadas ou entao parado"""
+
         agora = pg.time.get_ticks()
 
         # __ ajustando andada
@@ -197,26 +226,30 @@ class Jogador(pg.sprite.Sprite):
             self.walking = False
 
         if self.walking:
-            if agora - self.last_update > 200:
-                self.last_update = agora
-                self.current_frame = (self.current_frame + 1) % len(self.walk_r)
+            if agora - self.last_update > 200: # checa se está na hora de mudar os frames
+                self.last_update = agora  # se estiver o tempo do último update de imagem se tona o momento
+                self.current_frame = (self.current_frame + 1) % len(self.walk_r) # pra trocar a frame 
 
         if self.Vx > 0:
             self.image = self.walk_r[self.current_frame]
         elif self.Vx < 0:
             self.image = self.walk_l[self.current_frame]
 
+        #__ ajustando o pulo
+
         if self.Vy != 0:
             self.jumpping = True
 
         if self.jumpping:
-            if agora - self.last_update > 200:
+            if agora - self.last_update > 200:# checa se está na hora de mudar os frames
                 if self.Vy < 0:
                     self.last_update = agora
                     self.image = self.jump[0]
                 elif self.Vy > 0:
                     self.last_update = agora
                     self.image = self.jump[1]
+
+        #__ ajustando posição de frente 
 
         if not self.jumpping and not self.walking:
             self.image = self.front[0]  # troca a imagem para o frame correto
@@ -236,6 +269,9 @@ class Setas(pg.sprite.Sprite):
         self.rect.y = y
 
 class Plataformas_regulares(pg.sprite.Sprite):
+
+    """Defini as plataformas que serão geradas de forma regular com o passar do jogo e a necessidade de novas plataformas"""
+
     def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
 
@@ -246,6 +282,9 @@ class Plataformas_regulares(pg.sprite.Sprite):
 
 
 class Plataformas_aleatorias(pg.sprite.Sprite):
+
+    """Defini as plataformas que serão geradas de forma aleatórias em quantidade ao passar do jogo"""
+
     def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
 
@@ -256,6 +295,9 @@ class Plataformas_aleatorias(pg.sprite.Sprite):
 
 
 class Plataformas_super_pulo(pg.sprite.Sprite):
+
+    """Plataformas geradas em um intervalo maior, e que quando tocadas irão gerar pulos maiores"""
+
     def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
 
@@ -266,6 +308,9 @@ class Plataformas_super_pulo(pg.sprite.Sprite):
 
 
 class Plataformas_quebradicas(pg.sprite.Sprite):
+
+    """Plataformas também geradas de forma aleatória em quantidade e menos, desaparecem quando tocadas pelo jogador"""
+
     def __init__(self, spritesheet_p, x, y):
         pg.sprite.Sprite.__init__(self)
 
@@ -278,6 +323,9 @@ class Plataformas_quebradicas(pg.sprite.Sprite):
 # ===Classe do jogo
 class Game:
     def __init__(self):
+
+        """Inicia o jogo: tela, grupo de sprites, música, looping que mostra que o jogo está rodando, seta clock pro jogo
+            coloca tempo e nome"""
 
         # =====Iniciações
         pg.init()
@@ -300,10 +348,14 @@ class Game:
         self.clock = pg.time.Clock()  # tempo
 
     def load_data(self):
-        # carrega o high sore
+
+        """carrega os files: de highscore, os de imagens de spritesheet, e de música"""
+
+        #imagens-caminho de diretório
         self.dir = path.dirname(__file__)  # usado para encontrar o folder do arquivo
         img_dir = path.join(self.dir, 'img')
 
+        # carrega o high sore
         with open(path.join(self.dir, HS_FILE), 'w') as ah:  # abre o file para escrevermos o highscore, olhar, ou criar
             try:
                 self.highscore = int(ah.read())
@@ -316,11 +368,17 @@ class Game:
 
         #carrega sons 
         self.snd_dir = path.join(self.dir, 'snd')
-        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
-        #self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, PULO_SND))
+        
+        self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump.wav'))
+        self.jump_super_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump_super.wav'))
+        self.jump_quebra_sound = pg.mixer.Sound(path.join(self.snd_dir, 'break.wav'))
         
 
     def refresh(self):  # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
+
+        """função responsável por reiniciar e agregar novos fatores no jogo. Reinicia valores e posições do jogador, 
+            adiniciona cada grupo de plataformas e cada uma nas lista nos grupos de sprites, puxa o run"""
+
         self.score = 0
 
         # ==== Grupo de sprits (personagens)
@@ -335,6 +393,8 @@ class Game:
         self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
         self.platforms_P = pg.sprite.Group()  # grupo para as plataformas super pulo
         self.platforms_Q = pg.sprite.Group()  # grupo para as plataformas quebradicas
+
+        #=== Pega as plataformas nos grupos inicias e adiciona cada uma nos grupos de sprites 
 
         for plat in LISTA_plataformas_iniciais:
             p = Plataformas_regulares(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
@@ -359,6 +419,9 @@ class Game:
         self.run()
 
     def run(self):
+
+        """Roda todas as funcionalidades do loop do game, chamanddo todas as funções base"""
+
         # game Loop
         self.clock.tick(FPS)
         # ==== Chamando events e as tres funções básicas do game loop que se conversam
@@ -368,6 +431,11 @@ class Game:
         #pg.mixer.music.fadeout(500)
 
     def updates(self):
+
+        """ Faz os updates(como o própro nome diz). Primeiramente é a respossável por verificar as colisões entre o jogador
+            e plataformas (as dos 4 grupos), e além de verificar ajusta a posição e velocidade do jogador pós colisão. 
+            vai movendo as plataformas pra baixo até o final na dela e depois as destroi, e conforme vão desaparecendo novas são geradas"""
+
         # faz updates
         self.all_sprites.update()
 
@@ -379,24 +447,28 @@ class Game:
         hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q, False)  # contato com as plataformas quebradicas
 
         if hits:  # verifica impacto entre jogador e as plataformas regulares para realizar o pulo
+
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits[0].rect.top) and (
-                    self.jogador.maior_altura < hits[0].rect.top):
-                self.jogador.rect.bottom = hits[0].rect.top
-                self.jogador.image = self.jogador.front[0]
-                self.jumpping = False
+                    self.jogador.maior_altura < hits[0].rect.top): 
+                self.jogador.rect.bottom = hits[0].rect.top  #ajusta a posição do jogador 
+                self.jogador.image = self.jogador.front[0] #seleciona a anição que vai ser mostrada 
+                self.jumpping = False #diz que ta apenas de frente assim que faz o contato
                 self.walking = False
-                self.jogador.Vy = -PULO_JOGADOR
-                #self.jump_sound.play()
+                self.jogador.Vy = -PULO_JOGADOR  #ajusta para o pulo assim que tocou 
+
+                self.jump_sound.play() #toca o som do contato
 
 
         if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
+
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
                     self.jogador.maior_altura < hits2[0].rect.top):
                 self.jogador.rect.bottom = hits2[0].rect.top
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
-                #self.jump_sound.play()
+                
+                self.jump_sound.play()
 
         if hits3:  # verifica impacto entre jogador e a plataforma super_pulo para realizar o super pulo
             
@@ -406,9 +478,11 @@ class Game:
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -SUPER_PULO
-                #self.jump_sound.play()
+
+                self.jump_super_sound.play()
 
         if hits4:  # verifica impacto entre jogador e as plataformas quebradicas para realizar o pulo
+
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits4[0].rect.top) and (
                     self.jogador.maior_altura < hits4[0].rect.top):
                 hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q,
@@ -417,7 +491,8 @@ class Game:
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
-                #self.jump_sound.play()
+                
+                self.jump_quebra_sound.play()
 
         # ___Fazer a tela rodar quando o jogador chegar a 1/4 da tela___
         if self.jogador.rect.top <= HEIGHT / 4:
@@ -533,6 +608,8 @@ class Game:
             self.rodando = False
 
     def events(self):
+
+        """Trata ações que o usuário tomou durante o jogo e as coletas para devolver ações. Verifica se o jogador deseja desligar """
         # Process input (events)
 
         events = pg.event.get()
@@ -545,18 +622,25 @@ class Game:
             self.jogador.trata_eventos(event)
 
     def draw(self):
+
+        """Função pata desenvolver as sprites que estão no grupo e os textos que aparecerão"""
+
         # Função para desenvolver imagens
 
-        backgrond = pg.image.load(
-            path.join(path.join(self.dir, 'img'), "background.png")).convert()  # pega imagem do fundo
-        backgrond_rect = backgrond.get_rect()
+        backgrond = pg.image.load(path.join(path.join(self.dir, 'img'), "background.png")).convert()  # pega imagem do fundo
+        backgrond_rect = backgrond.get_rect() #defini o retangulo da imagem 
         self.screen.blit(backgrond, backgrond_rect)  # coloca o backgound
-        self.all_sprites.draw(self.screen)
+
+        self.all_sprites.draw(self.screen) #sprites
         self.screen.blit(self.jogador.image, self.jogador.rect)
-        self.draw_textos(str(self.score), 22, WHITE, WIDTH / 2, 15)
+
+        self.draw_textos(str(self.score), 22, WHITE, WIDTH / 2, 15) #textos
+
         pg.display.flip()  # uma desenhada e outra em construção #*after* drawuing everything
 
     def draw_textos(self, text, size, color, x, y):
+
+        """Defini textos que aparecerão. Fonte, tamanho e imagem. Desenha eles  """
 
         # Função pra desenvolver os textos nas telas
 
@@ -564,12 +648,18 @@ class Game:
         texto_surface = font.render(text, True, color)  # onde
         texto_rect = texto_surface.get_rect()  # o que
         texto_rect.midtop = (x, y)  # onde do onde
-        self.screen.blit(texto_surface, texto_rect)  # taraw
+        self.screen.blit(texto_surface, texto_rect)  # taraw!!
 
     def tela_inicial(self):
 
+        """Carrega as tela inicial que contém o nome e scores e fica até a ação da pessoa"""
+
         self.screen.fill(BLUEM)
-        self.draw_textos(NOME, 80, WHITE, WIDTH / 2, HEIGHT / 4)
+
+        #pg.mixer.music.load(path.join(self.snd_dir,GAME_OVER_SND ))
+        #pg.mixer.music.play(loops = -1)
+        
+        self.draw_textos(NOME, 80, WHITE, WIDTH / 2, HEIGHT / 4) #chama os textos 
 
         # Instruções
         self.draw_textos("Precione espaço para instruções", 30, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
@@ -579,7 +669,15 @@ class Game:
 
     def tela_instrucoes(self):
 
+        """Carrega uma tela de instruções. Com isso tem textos de instruções e as imagens de plataformas a serem carregadas
+            espera ação do usuário"""
+
         self.screen.fill(BLUEM)
+
+        #pg.mixer.music.load(path.join(self.snd_dir,GAME_OVER_SND ))
+        #pg.mixer.music.play(loops = -1)
+
+        #desenha as setinhas 
         self.draw_textos("Use as setas para se mover", 22, WHITE, 350, 80)
         self.draw_textos("<=   =>", 60, GREEN, 140, 60)
 
@@ -597,23 +695,26 @@ class Game:
         self.draw_textos("fazem realizar um super pulo", 22, WHITE, 350, 400)
         self.demonstration_sprites.add(Plataformas_super_pulo(self.spritesheet_p, 100, 390))
 
-        self.draw_textos("Precione espaço para começar", 30, GREEN, WIDTH / 2, (HEIGHT * 5 / 6))
+        self.draw_textos("Precione espaço para começar", 30, GREEN, WIDTH / 2, (HEIGHT * 5 / 6)) #instrução
 
-        self.demonstration_sprites.draw(self.screen)
+        self.demonstration_sprites.draw(self.screen) #sprites
         pg.display.flip()
         self.espera_acao()
 
     def tela_final(self):
+
+        """tela final de game over, traz textos de resultados (score + highscore): edita o arquivo de score caso o score seja mais alto que o highscore
+            antigo e imagem do personagem triste"""
 
         # Função para definir a tela final de gameover
 
         if self.rodando:  # se quiser sair não tem que mostrar a tela final
             return
 
-        pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
-
-        pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
+        #==Músicas de final 
+        pg.mixer.music.load(path.join(self.snd_dir,GAME_OVER_SND ))
         pg.mixer.music.play(loops = -1)
+
         self.screen.fill(BLUEM)
         
         # resultados
@@ -629,9 +730,11 @@ class Game:
             self.draw_textos("HIGH SCORE: " + str(self.highscore), 22, WHITE, WIDTH / 2, (HEIGHT / 2 + 40))
         pg.display.flip()
         self.espera_acao()
-        pg.mixer.music.fadeout(500)
+        #
 
     def espera_acao(self):
+
+        """Função que controla quando o jogador clica algo pra sair das telas auxílares"""
 
         # Função para não bagunçar os eventos, e controlar o tempo e espera das telas iniciais e finais
 
@@ -649,19 +752,25 @@ class Game:
                         esperando = False
                         self.rodando = True
 
+#---------------------------------------------------------------------------------------------------------------------
+
+"""Loop do jogo que controla por partes e quando mudar telas ou quando está de fato rodando o loop principal"""
 
 g = Game()  # o jogo de fato
 while g.jogo:
     g.tela_inicial()  # gera menu inicial e high score
+
     if g.jogo:  # garante que da pra fechar o jogo no menu inicial
         g.tela_instrucoes()  # gera menu de instruções
         g.refresh()  # reniciar apenas no novo jogo
+
+    pg.mixer.music.load(path.join(g.snd_dir,'fell_good.wav' )) #música de fundo principal
     pg.mixer.music.play(loops = -1)
     while g.rodando:
         g.run()  # gera a gameplay de fato
 
     if g.jogo:  # garante que da pra fechar o jogo no meio do run
-        #pg.mixer.music.play(loops = -1)
         g.tela_final()  # tela do game over
+        pg.mixer.music.fadeout(500)
     continue
 pg.quit()
