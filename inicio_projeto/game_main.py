@@ -8,8 +8,13 @@ FPS = 30
 NOME = "Space Jump!"
 FONTE = 'arial'
 HS_FILE = "highscore.txt"
+
+#FILES 
 SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
+MUSICA = "fell_good.wave"
+#PULO_SND = 
+GAME_OVER_SND = "never_giveup.wave"
 
 # == Player properies
 JOGADOR_ACEL = 8
@@ -27,6 +32,7 @@ YELLOW = (255, 255, 0)
 ORANGE = (255, 97, 3)
 LIGHTBLUE = (10, 155, 155)
 DARKBLUE = (25, 25, 100)
+BLUEM = (138,43, 226)
 
 # assets
 
@@ -298,7 +304,7 @@ class Game:
         self.dir = path.dirname(__file__)  # usado para encontrar o folder do arquivo
         img_dir = path.join(self.dir, 'img')
 
-        with open(path.join(self.dir, HS_FILE), 'w') as ah:  # abre o file para escrevermos, olhar, ou criar
+        with open(path.join(self.dir, HS_FILE), 'w') as ah:  # abre o file para escrevermos o highscore, olhar, ou criar
             try:
                 self.highscore = int(ah.read())
             except:
@@ -307,6 +313,11 @@ class Game:
         # carrega imagens das sprites
         self.spritesheet = Spritessheets(path.join(img_dir, SPRITESHEET))
         self.spritesheet_p = Spritessheets_plat(path.join(img_dir, SPRITESHEET_PLAT))
+
+        #carrega sons 
+        self.snd_dir = path.join(self.dir, 'snd')
+        #self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, PULO_SND))
+        
 
     def refresh(self):  # renicia o jogo quando morre, vai rodar um novo jogo // atualizações
         self.score = 0
@@ -343,15 +354,20 @@ class Game:
             p = Plataformas_quebradicas(self.spritesheet_p, *plat)  # explora todas a lista de forma quebrada
             self.all_sprites.add(p)
             self.platforms_Q.add(p)
+        
+        
+        self.run()
 
     def run(self):
         # game Loop
         self.clock.tick(FPS)
-
+        pg.mixer.music.load(path.join(self.snd_dir,'fell_good.wav' ))
+        pg.mixer.music.play(loops = -1)
         # ==== Chamando events e as tres funções básicas do game loop que se conversam
         self.events()  # recebe comandos do taclado e mouse (controle do jogador)
         self.updates()
         self.draw()
+        pg.mixer.music.fadeout(500)
 
     def updates(self):
         # faz updates
@@ -372,6 +388,8 @@ class Game:
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
+                #self.jump_sound.play()
+
 
         if hits2:  # verifica impacto entre jogador e as plataformas aleatorias para realizar o pulo
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits2[0].rect.top) and (
@@ -380,17 +398,19 @@ class Game:
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
+                #self.jump_sound.play()
 
         if hits3:  # verifica impacto entre jogador e a plataforma super_pulo para realizar o super pulo
+            
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits3[0].rect.top) and (
                     self.jogador.maior_altura < hits3[0].rect.top):
                 self.jogador.rect.bottom = hits3[0].rect.top
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -SUPER_PULO
+                #self.jump_sound.play()
 
         if hits4:  # verifica impacto entre jogador e as plataformas quebradicas para realizar o pulo
-
             if (self.jogador.Vy > 0) and (self.jogador.rect.bottom > hits4[0].rect.top) and (
                     self.jogador.maior_altura < hits4[0].rect.top):
                 hits4 = pg.sprite.spritecollide(self.jogador, self.platforms_Q,
@@ -399,6 +419,7 @@ class Game:
                 self.jumpping = False
                 self.walking = False
                 self.jogador.Vy = -PULO_JOGADOR
+                #self.jump_sound.play()
 
         # ___Fazer a tela rodar quando o jogador chegar a 1/4 da tela___
         if self.jogador.rect.top <= HEIGHT / 4:
@@ -548,7 +569,7 @@ class Game:
 
     def tela_inicial(self):
 
-        self.screen.fill(DARKBLUE)
+        self.screen.fill(BLUEM)
         self.draw_textos(NOME, 80, WHITE, WIDTH / 2, HEIGHT / 4)
 
         # Instruções
@@ -559,7 +580,7 @@ class Game:
 
     def tela_instrucoes(self):
 
-        self.screen.fill(DARKBLUE)
+        self.screen.fill(BLUEM)
         self.draw_textos("Use as setas para se mover", 22, WHITE, 350, 80)
         self.draw_textos("<=   =>", 60, GREEN, 140, 60)
 
@@ -589,7 +610,10 @@ class Game:
 
         if self.rodando:  # se quiser sair não tem que mostrar a tela final
             return
-        self.screen.fill(DARKBLUE)
+
+        #pg.mixer.music.load(path.join(self.snd_dir,'never_giveup.wav' ))
+        self.screen.fill(BLUEM)
+        self.over_sound.play()
         # resultados
         self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT / 4)
         self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH / 2, HEIGHT / 2)
@@ -624,6 +648,7 @@ class Game:
 
 
 g = Game()  # o jogo de fato
+
 while g.jogo:
     g.tela_inicial()  # gera menu inicial e high score
     if g.jogo:  # garante que da pra fechar o jogo no menu inicial
