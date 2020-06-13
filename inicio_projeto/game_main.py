@@ -12,6 +12,7 @@ HS_FILE = "highscore.txt"
 #FILES 
 SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
+SPRITESHEET_NAVES = "spritesheet_spaceships.png"
 MUSICA = "fell_good.wav"
 PULO_SND = "Jump.wav"
 SUPER_PULO = 'Jump_super.wav'
@@ -118,6 +119,7 @@ class Spritessheets_plat:
         image = pg.transform.scale(image, (largura, altura))
 
         return image
+
 
 
 # jogador#
@@ -335,6 +337,7 @@ class Game:
 
         self.all_sprites = pg.sprite.Group()
         self.demonstration_sprites = pg.sprite.Group()
+        
 
         pg.mixer.init()  # musica
         self.rodando = True  # define o looping do gameplay
@@ -656,6 +659,8 @@ class Game:
 
         self.screen.fill(BLUEM)
 
+
+
         #pg.mixer.music.load(path.join(self.snd_dir,GAME_OVER_SND ))
         #pg.mixer.music.play(loops = -1)
         
@@ -664,6 +669,7 @@ class Game:
         # Instruções
         self.draw_textos("Precione espaço para instruções", 30, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
         self.draw_textos(("High Score :" + str(self.highscore)), 22, WHITE, (WIDTH / 2), 15)
+
         pg.display.flip()
         self.espera_acao()
 
@@ -774,3 +780,34 @@ while g.jogo:
         pg.mixer.music.fadeout(500)
     continue
 pg.quit()
+
+
+
+
+
+
+"""Nosso projeto é jogo  plataformas, que tem o objetivo sempre de ir o mais alto possível e atingir uma pontuação maior.Foi desenvolvido como Projeto Final da diciplina de Design de Software, 
+    no primeiro semestre de Engenharia-2020
+
+    Para rodar nosso jogo será necessário a instalação do Pygame (um framework para desenvolvimento de jogos), para a instalação em Windows e Linux você deve abrir o terminal e digitar 
+    "pip install pygame", se seu computador é um Mac baixe Homebrew, abra o terminal e digite "brew install sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_net sdl2_ttf // brew install Caskroom/cask/xquartz//
+    git clone -b 1.9.6 --single-branch https://github.com/pygame/pygame.git // cd pygame // python setup.py -config -auto -sdl2//python setup.py install//cd ..//rm -rf pygame" Para mais 
+    detalhes sobre pygame acesse :https://www.pygame.org/
+
+    Com o Pygame baixado tenha certeza que todos os arquivos contidos no programa foram clonados e você os possui no seu computador, com tudo baixado basta dar play e aproveitar o nosso Jogo :) """
+
+
+"""Nossas referências: 
+
+        - Usamos como base o código desenvolvido no KidsCanCode : http://kidscancode.org/lessons/ 
+                                                                  https://www.youtube.com/watch?v=uWvb3QzA48c&feature=youtu.be
+
+        - Nossos sons foram retirados dos seguintes links : http://bfxr.net/
+                                                            https://www.youtube.com/watch?v=9NcPvmk4vfo
+                                                            https://www.youtube.com/watch?v=MltJnhBLGtw
+
+        - Usamos também como fonte de aprendizado no uso de pygame os vídeos e documentos disponibilizados pelos professores do Insper-SP. 
+"""
+
+
+    
