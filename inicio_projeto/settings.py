@@ -10,7 +10,7 @@ SPRITESHEET = "p1_spritesheet.png"
 SPRITESHEET_PLAT = "tiles_spritesheet.png"
 MUSICA = "fell_good.wav"
 PULO_SND = "Jump.wav"
-SUPER_PULO = 'Jump_super.wav'
+SUPER_PULO_SND = 'Jump_super.wav'
 QUEBRA_SND = 'break.wav'
 GAME_OVER_SND = "never_giveup.wav"
 
