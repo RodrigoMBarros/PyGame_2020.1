@@ -25,7 +25,6 @@ from Classes_Plataformas import Plataformas_regulares, Plataformas_aleatorias, P
 from Classe_Jogador import Jogador
 
 
-
 # ===Classe do jogo
 class Game:
     def __init__(self):
@@ -39,9 +38,7 @@ class Game:
         # ======tela
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
-        self.all_sprites = pg.sprite.Group()
         self.demonstration_sprites = pg.sprite.Group()
-        self.end_sprites = pg.sprite.Group()
 
         pg.mixer.init()  # musica
         self.rodando = True  # define o looping do gameplay
@@ -57,7 +54,7 @@ class Game:
         with open(path.join(self.dir, HS_FILE), 'w') as ah:  # abre o file para escrevermos o highscore, olhar, ou criar
             try:
                 self.highscore = int(ah.read())
-            except:
+            except (FileNotFoundError, IOError):
                 self.highscore = 0
 
         # carrega imagens das sprites
@@ -72,6 +69,8 @@ class Game:
         self.jump_quebra_sound = pg.mixer.Sound(path.join(self.snd_dir, QUEBRA_SND))
 
         self.jogador = Jogador(self.spritesheet)
+        self.jumpping = False
+        self.walking = False
 
         self.highscore = 0
         self.score = 0
@@ -86,18 +85,20 @@ class Game:
 
         self.score = 0
 
-        # ==== Grupo de sprits (personagens)
-        self.all_sprites.add(self.jogador)
-        self.jogador.rect.x = WIDTH / 2  # devolve o jogador para a posicao original
-        self.jogador.rect.y = HEIGHT / 2
-        self.jogador.Vy = 0  # devolve jogador para a velocidade original
-        self.jogador.Vx = 0  # devolve jogador para a velocidade original
+        self.all_sprites = pg.sprite.Group()
 
         # === Grupo de spreites plataformas
         self.platforms_R = pg.sprite.Group()  # grupo para as plataformas regulares
         self.platforms_A = pg.sprite.Group()  # grupo para as plataformas aleatorias
         self.platforms_P = pg.sprite.Group()  # grupo para as plataformas super pulo
         self.platforms_Q = pg.sprite.Group()  # grupo para as plataformas quebradicas
+
+        # ==== Grupo de sprits (personagens)
+        self.all_sprites.add(self.jogador)
+        self.jogador.rect.x = WIDTH / 2  # devolve o jogador para a posicao original
+        self.jogador.rect.y = HEIGHT / 2
+        self.jogador.Vy = 0  # devolve jogador para a velocidade original
+        self.jogador.Vx = 0  # devolve jogador para a velocidade original
 
         # === Pega as plataformas nos grupos inicias e adiciona cada uma nos grupos de sprites
 
@@ -312,6 +313,10 @@ class Game:
                     sprite.kill()
 
         if len(self.platforms_R) == 0:
+            self.platforms_R.empty()
+            self.platforms_A.empty()
+            self.platforms_P.empty()
+            self.platforms_Q.empty()
             self.rodando = False
 
     def events(self):
