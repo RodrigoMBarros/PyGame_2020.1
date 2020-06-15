@@ -5,7 +5,9 @@ Camila Ladeira \
 Rodrigo Barros\
 
 Nosso projeto é jogo  plataformas, que tem o objetivo sempre de ir o mais alto possível e atingir uma pontuação maior.Foi desenvolvido como Projeto Final da diciplina de Design de Software, 
-    no primeiro semestre de Engenharia-2020
+    no primeiro semestre de Engenharia-2020. 
+
+    https://youtu.be/ThBXP1iF0OQ  -> Conheça o nosso projeto 
 
     Para rodar nosso jogo será necessário a instalação do Pygame (um framework para desenvolvimento de jogos), para a instalação em Windows e Linux você deve abrir o terminal e digitar 
     "pip install pygame", se seu computador é um Mac baixe Homebrew, abra o terminal e digite "brew install sdl2 sdl2_gfx sdl2_image sdl2_mixer sdl2_net sdl2_ttf // brew install Caskroom/cask/xquartz//
