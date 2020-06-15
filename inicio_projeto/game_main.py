@@ -376,7 +376,7 @@ class Game:
         self.draw_textos(NOME, 80, WHITE, WIDTH / 2, HEIGHT / 4)  # chama os textos
 
         # Instruções
-        self.draw_textos("Precione espaço para instruções", 30, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
+        self.draw_textos("Pressione espaço para instruções", 30, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
         self.draw_textos(("High Score :" + str(self.highscore)), 22, WHITE, (WIDTH / 2), 15)
 
         pg.display.flip()
@@ -407,7 +407,7 @@ class Game:
         self.draw_textos("fazem realizar um super pulo", 22, WHITE, 350, 400)
         self.demonstration_sprites.add(Plataformas_super_pulo(self.spritesheet_p, 100, 390))
 
-        self.draw_textos("Precione espaço para começar", 30, GREEN, WIDTH / 2, (HEIGHT * 5 / 6))  # instrução
+        self.draw_textos("Pressione espaço para começar", 30, GREEN, WIDTH / 2, (HEIGHT * 5 / 6))  # instrução
 
         self.demonstration_sprites.draw(self.screen)  # sprites
         pg.display.flip()
@@ -432,7 +432,7 @@ class Game:
         # resultados
         self.draw_textos("GAME OVER", 48, BLACK, WIDTH / 2, HEIGHT / 4)
         self.draw_textos("Score = " + str(self.score), 22, GREEN, WIDTH / 2, HEIGHT / 2)
-        self.draw_textos("Precione espaço para jogar novamente", 22, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
+        self.draw_textos("Pressione espaço para jogar novamente", 22, GREEN, WIDTH / 2, (HEIGHT * 3 / 4))
         if self.score > self.highscore:
             self.highscore = self.score
             self.draw_textos("NOVO HIGH SCORE!", 22, WHITE, WIDTH / 2, (HEIGHT / 2 + 40))
